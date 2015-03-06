@@ -1,0 +1,24 @@
+Third Party Legal Notices
+This product includes software licensed under terms that require Mikeware to display the following notices:
+
+AP(r) Computer Science GridWorld Case Study (gridworld.jar)
+-----------------------------------------------------------
+
+Copyright(c) 2002-2006 College Entrance Examination Board 
+(http://www.collegeboard.com).
+ 
+
+This code is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation.
+
+
+This code is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+
+Julie Zelenski, Chris Nevison, and Cay Horstmann
+
+https://apstudent.collegeboard.org/apcourse/ap-computer-science-a/about-the-exam/gridworld-case-study

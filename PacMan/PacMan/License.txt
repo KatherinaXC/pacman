@@ -1,0 +1,23 @@
+Mikeware Educational License (MEL)
+V1.0, September 2013
+ 
+It is appreciated if you notify us of your use of the software in an educational context at: questions at mikeware dot com.
+ 
+Restrictions on Use. You may not, and you may not permit others to:
+ (a) reverse engineer, decompile, decode, decrypt, disassemble, or in any way derive source code from, the Software;
+ (b) modify, translate, adapt, alter, or create derivative works from the Software except for use within your organization;
+ (c) copy (other than one back-up copy), distribute, publicly display, transmit, sell, rent, lease or otherwise exploit the Software; or
+ (d) distribute, sell, sublicense, rent, lease, loan or grant any third party access to or use of the Software to any third party.
+ 
+You may share and distribute the software within your classroom any number of times provided the package is hosted on a non-public location.  Ideally, point students or others to the original location on mikeware.com for wider distribution and the latest versions.
+
+You may not use or promote the work for commercial purposes.
+
+You (and your students) are free to release videos, reviews, or tutorials (but not solutions) on the software if you link to the original distribution at mikeware.com.
+Portions of this software may be licensed under different terms, see the Third Party Notice (if included) for more information.
+ 
+The Software is provided "as is" without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement
+ 
+You assume responsibility for selecting the software to achieve your intended results, and for the results obtained from your use of the software. You shall bear the entire risk as to the quality and the performance of the software.
+ 
+This license is formed in part by clauses from http://www.contractstandards.com/ under a CC BY-SA 3.0 license.  This license is also licensed under a CC BY-SA 3.0 license: http://creativecommons.org/licenses/by-sa/3.0/.

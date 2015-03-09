@@ -10,19 +10,29 @@ import java.awt.Color;
  */
 public class PacMan extends Actor implements PacManInterface {
 
+    MyStats mystats;
+
     @Override
     public void initializeStats(MyStats ms, Color color) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.mystats = ms;
+        this.setColor(color);
     }
 
     @Override
     public void start(Grid<Actor> grid, Location lctn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.putSelfInGrid(grid, lctn);
     }
 
     @Override
     public void superPacMan(boolean bln, Actor actor) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        mystats.addSuper();
+        if (actor == this) {
+            if (bln) {
+                this.setColor(Color.BLUE);
+            } else {
+                this.setColor(Color.YELLOW);
+            }
+        }
     }
 
     @Override

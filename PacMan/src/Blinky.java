@@ -2,6 +2,6 @@
  *
  * @author s-zhouj
  */
-public class Blinky {
+public class Blinky implements GhostInterface {
     
 }

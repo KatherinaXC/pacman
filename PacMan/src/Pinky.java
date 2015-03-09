@@ -2,6 +2,6 @@
  *
  * @author s-zhouj
  */
-public class Pinky {
+public class Pinky implements GhostInterface {
     
 }

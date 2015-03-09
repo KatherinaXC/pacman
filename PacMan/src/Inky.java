@@ -2,6 +2,6 @@
  *
  * @author s-zhouj
  */
-public class Inky {
+public class Inky implements GhostInterface {
     
 }

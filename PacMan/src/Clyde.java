@@ -1,7 +1,8 @@
+
 /**
  *
  * @author s-zhouj
  */
-public class Clyde implements GhostInterface {
-    
+public class Clyde extends Ghost implements GhostInterface {
+
 }

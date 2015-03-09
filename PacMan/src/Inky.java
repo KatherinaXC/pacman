@@ -1,7 +1,8 @@
+
 /**
  *
  * @author s-zhouj
  */
-public class Inky implements GhostInterface {
-    
+public class Inky extends Ghost implements GhostInterface {
+
 }

@@ -2,6 +2,6 @@
  *
  * @author s-zhouj
  */
-public class PacMan {
+public class Pinky {
     
 }

@@ -10,24 +10,28 @@ import java.awt.Color;
  */
 public class PacMan extends Actor implements PacManInterface {
 
-    MyStats mystats;
+    private Grid<Actor> grid;
+    private MyStats myStats;
+    private boolean amSuper = false;
 
     @Override
     public void initializeStats(MyStats ms, Color color) {
-        this.mystats = ms;
+        this.myStats = ms;
         this.setColor(color);
     }
 
     @Override
     public void start(Grid<Actor> grid, Location lctn) {
+        this.grid = grid;
         this.putSelfInGrid(grid, lctn);
     }
 
     @Override
     public void superPacMan(boolean bln, Actor actor) {
-        mystats.addSuper();
         if (actor == this) {
+            this.amSuper = bln;
             if (bln) {
+                myStats.addSuper();
                 this.setColor(Color.BLUE);
             } else {
                 this.setColor(Color.YELLOW);
@@ -37,12 +41,17 @@ public class PacMan extends Actor implements PacManInterface {
 
     @Override
     public void eaten() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        myStats.died();
+        this.removeSelfFromGrid();
     }
 
     @Override
     public boolean isSuperPacMan() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.amSuper;
+    }
+
+    @Override
+    public void act() {
     }
 
 }

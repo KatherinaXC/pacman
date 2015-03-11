@@ -4,6 +4,7 @@ import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  *
@@ -44,25 +45,24 @@ public class PacMan extends Actor implements PacManInterface {
         //Set basic stats
         this.grid = grid;
         this.putSelfInGrid(grid, lctn);
+        this.setDirection(Location.EAST);
         //Read through the grid to get locations for pellets and ghosts
-        for (int cols = 0; cols < grid.getNumCols(); cols++) {
-            for (int rows = 0; rows < grid.getNumRows(); rows++) {
-                Location temploc = new Location(rows, cols);
-                //if it's a pellet or power pellet (power pellets extend pellet)
-                if (grid.get(temploc) instanceof Pellet) {
-                    pellets.add(grid.get(temploc));
-                }
-                //if it's a ghost
-                if (grid.get(temploc) instanceof Ghost) {
-                    ghosts.add(grid.get(temploc));
-                }
+        ArrayList<Location> locs = grid.getOccupiedLocations();
+        for (int i = 0; i < locs.size(); i++) {
+            //if it's a pellet or power pellet (power pellets extend pellet)
+            if (grid.get(locs.get(i)) instanceof Pellet) {
+                pellets.add(grid.get(locs.get(i)));
+            }
+            //if it's a ghost
+            if (grid.get(locs.get(i)) instanceof Ghost) {
+                ghosts.add(grid.get(locs.get(i)));
             }
         }
     }
 
     /**
      * Called when this Pac-Man eats a PowerPellet. Pac-Man should set their
-     * color to BLUE when Pa-cMan turns super and return to their original color
+     * color to BLUE when Pac-Man turns super and return to their original color
      * when they've stopped. A Pac-Man may eat ghosts when any other Pac-Man is
      * super.
      *
@@ -103,8 +103,88 @@ public class PacMan extends Actor implements PacManInterface {
         return this.amSuper;
     }
 
+    /**
+     * Performs one step of action.
+     */
     @Override
     public void act() {
+        //Find the closest pellet.
+        Actor closestPellet = this.pellets.get(0);
+        for (Actor pellet : this.pellets) {
+            if (Math.sqrt(
+                    Math.pow(pellet.getLocation().getRow() - this.getLocation().getRow(), 2)
+                    + Math.pow(pellet.getLocation().getCol() - this.getLocation().getCol(), 2)
+            ) < Math.sqrt(
+                    Math.pow(closestPellet.getLocation().getRow() - this.getLocation().getRow(), 2)
+                    + Math.pow(closestPellet.getLocation().getCol() - this.getLocation().getCol(), 2)
+            )) {
+                closestPellet = pellet;
+            }
+        }
+        //If there's already a pellet there, eat it.
+        if (grid.get(filter(forward())) instanceof PowerPellet) {
+            this.pellets.remove(closestPellet);
+            this.myStats.addSuper();
+        } else if (grid.get(filter(forward())) instanceof Pellet) {
+            this.pellets.remove(closestPellet);
+            this.myStats.scorePellet();
+        }
+        //Move forwards
+        this.moveTo(filter(forward()));
+        //Find the direction towards the closest pellet.
+        int direction = this.getLocation().getDirectionToward(closestPellet.getLocation());
+        this.setDirection(direction);
     }
 
+    /**
+     * Prevent the Pac-Man from walking into a wall, and if Pac-Man needs to
+     * walk into a wall, redirect him. Be sure to always call this method when
+     * attempting to move forward.
+     *
+     * @param loc
+     * @return
+     */
+    private Location filter(Location loc) {
+        if (grid.get(loc) instanceof Wall) {
+            Random rand = new Random();
+            if (rand.nextInt(3) == 0) {
+                this.setDirection(Location.NORTH);
+                return filter(forward());
+            } else if (rand.nextInt(3) == 0) {
+                this.setDirection(Location.EAST);
+                return filter(forward());
+            } else if (rand.nextInt(3) == 0) {
+                this.setDirection(Location.SOUTH);
+                return filter(forward());
+            } else {
+                this.setDirection(Location.WEST);
+                return filter(forward());
+            }
+        }
+        return loc;
+    }
+
+    /**
+     * Take the current direction and apply it to Locations, creating a
+     * potential forwards movement target. This is effectively a case-based
+     * movement to translate cardinal directions to Locations using the current
+     * Location. This method DOES NOT filter out impossible Locations.
+     *
+     * @return
+     */
+    private Location forward() {
+        if (this.getDirection() == Location.NORTH || this.getDirection() == 45) {
+            //if north or northeast
+            return new Location(this.getLocation().getRow() - 1, this.getLocation().getCol());
+        } else if (this.getDirection() == Location.EAST || this.getDirection() == 135) {
+            //if east or southeast
+            return new Location(this.getLocation().getRow(), this.getLocation().getCol() + 1);
+        } else if (this.getDirection() == Location.SOUTH || this.getDirection() == 225) {
+            //if south or southwest
+            return new Location(this.getLocation().getRow() + 1, this.getLocation().getCol());
+        } else {
+            //if west or northwest
+            return new Location(this.getLocation().getRow(), this.getLocation().getCol() - 1);
+        }
+    }
 }

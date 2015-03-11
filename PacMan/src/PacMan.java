@@ -12,8 +12,8 @@ import java.util.ArrayList;
 public class PacMan extends Actor implements PacManInterface {
 
     private Grid<Actor> grid;
-    private ArrayList<Actor> pellets;
-    private ArrayList<Actor> ghosts;
+    private ArrayList<Actor> pellets = new ArrayList<Actor>();
+    private ArrayList<Actor> ghosts = new ArrayList<Actor>();
     private MyStats myStats;
     private boolean amSuper = false;
 

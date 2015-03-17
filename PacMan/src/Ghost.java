@@ -10,6 +10,8 @@ import java.awt.Color;
  */
 public class Ghost extends Actor implements GhostInterface {
 
+    private PacMan pacman;
+
     private Color origColor;
     private GhostArea spawnLoc;
     private MyStats myStats;
@@ -44,6 +46,11 @@ public class Ghost extends Actor implements GhostInterface {
     @Override
     public void start(Grid<Actor> grid, Location lctn) {
         this.putSelfInGrid(grid, lctn);
+        for (Location location : grid.getOccupiedLocations()) {
+            if (grid.get(location) instanceof PacMan) {
+                this.pacman = (PacMan) grid.get(location);
+            }
+        }
     }
 
     /**
@@ -75,4 +82,18 @@ public class Ghost extends Actor implements GhostInterface {
         }
     }
 
+    /**
+     * Returns the target location that the ghost wants to get to.
+     *
+     * @return
+     * @author Joyce
+     */
+    public Location target() {
+        //TODO
+        return this.getLocation();
+    }
+
+    public PacMan getPacMan() {
+        return this.pacman;
+    }
 }

@@ -118,60 +118,50 @@ public class PacMan extends Actor implements PacManInterface {
     public void act() {
         Location target = null;
         Random rand = new Random();
-
-        /* Finds the closest pellet birds-eye distance
-         if (this.pellets.indexOf(closestPellet) < 0) {
-         //Find the new closest pellet, if i've already eaten the last one
-         this.closestPellet = this.pellets.get(0);
-         for (Actor pellet : this.pellets) {
-         if (Math.sqrt(
-         Math.pow(pellet.getLocation().getRow() - this.getLocation().getRow(), 2)
-         + Math.pow(pellet.getLocation().getCol() - this.getLocation().getCol(), 2)
-         ) < Math.sqrt(
-         Math.pow(closestPellet.getLocation().getRow() - this.getLocation().getRow(), 2)
-         + Math.pow(closestPellet.getLocation().getCol() - this.getLocation().getCol(), 2)
-         )) {
-         closestPellet = pellet;
-         }
-         }
-         }
-         */
-        //If I'm not adjacent to a pellet, then pick a random direction and follow it.
-        //TODO MAKE THIS NOT RANDOM PLS.
-        //If I'm at an intersection, I can try to turn.
-        if (utility.atIntersection(this.getLocation())) {
-            this.setDirection(90 * rand.nextInt(4));
+        //Find the closest pellet
+        if (this.pellets.indexOf(closestPellet) < 0) {
+            //Find the new closest pellet, if i've already eaten the last one
+            this.closestPellet = this.pellets.get(pellets.size() - 1);
+            for (Actor pellet : this.pellets) {
+                if (Math.sqrt(
+                        Math.pow(pellet.getLocation().getRow() - this.getLocation().getRow(), 2)
+                        + Math.pow(pellet.getLocation().getCol() - this.getLocation().getCol(), 2)
+                ) < Math.sqrt(
+                        Math.pow(closestPellet.getLocation().getRow() - this.getLocation().getRow(), 2)
+                        + Math.pow(closestPellet.getLocation().getCol() - this.getLocation().getCol(), 2)
+                )) {
+                    closestPellet = pellet;
+                }
+            }
         }
+
+        //If I'm at an intersection, I can try to turn towards the closest pellet.
+        if (utility.atIntersection(this.getLocation())) {
+            this.setDirection(this.getLocation().getDirectionToward(closestPellet.getLocation()));
+        }
+        //If I can't do that, turn in a random direction that IS valid.
         while (!utility.directionMoveIsValid(this.getDirection(), this.getLocation())) {
             this.setDirection(90 * rand.nextInt(4));
         }
         target = utility.directionMove(this.getDirection(), this.getLocation());
 
-        //If I'm adjacent to a pellet, go there. (2nd priority)
-        for (Location surrloc : grid.getValidAdjacentLocations(this.getLocation())) {
-            //if it's not a diagonal (can't go in diagonals :P)
-            if (surrloc.getRow() == this.getLocation().getRow()
-                    || surrloc.getCol() == this.getLocation().getCol()) {
-                if (this.pellets.contains(grid.get(surrloc))) {
-                    target = surrloc;
-                    break;
-                }
-            }
-        }
+        //If I'm adjacent to something I want to eat, go there instead. (2nd priority)
+        target = utility.optimalStep(this.getLocation(), this);
 
-        //If the path I'll take goes towards a ghost, STEP AWAY FROM THE GHOST. (1st priority)
-        while (grid.get(target) instanceof Ghost) {
+        //If the path want to take goes towards a ghost (and i'm not super), do something that won't lead me towards a ghost. (1st priority)
+        while (grid.get(target) instanceof Ghost && !this.isSuperPacMan()) {
             this.setDirection(90 * rand.nextInt(4));
             target = utility.directionMove(this.getDirection(), this.getLocation());
         }
 
         //If I ate a pellet, count that and remove it from the pelletlist.
-        if (grid.get(target) instanceof PowerPellet) {
-            superPacMan(true, this);
-            this.myStats.addSuper();
-            this.pellets.remove(grid.get(target));
-        } else if (grid.get(target) instanceof Pellet) {
-            this.myStats.scorePellet();
+        if (grid.get(target) instanceof Pellet) {
+            if (grid.get(target) instanceof PowerPellet) {
+                this.myStats.addSuper();
+                this.superPacMan(true, this);
+            } else {
+                this.myStats.scorePellet();
+            }
             this.pellets.remove(grid.get(target));
         } else if (grid.get(target) instanceof Ghost) {
             if (this.isSuperPacMan()) {
@@ -186,5 +176,4 @@ public class PacMan extends Actor implements PacManInterface {
         this.setDirection(this.getLocation().getDirectionToward(target));
         this.moveTo(target);
     }
-
 }

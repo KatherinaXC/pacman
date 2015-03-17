@@ -1,8 +1,6 @@
 
-import info.gridworld.actor.Actor;
 import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
-import java.util.ArrayList;
 
 /**
  *
@@ -10,47 +8,37 @@ import java.util.ArrayList;
  */
 public class Utility {
 
-    Grid grid;
+    private static final int[] DIRECTIONS = {0, 90, 180, 270};
+    private Grid grid;
 
     public Utility(Grid grid) {
         this.grid = grid;
     }
 
-    public ArrayList<Location> getPath(Location current, Location target, ArrayList<Location> sofar) {
-        if (!this.grid.isValid(current)) {
-            return null;
+    public boolean atIntersection(Location current) {
+        int open = 0;
+        for (int direction : DIRECTIONS) {
+            if (directionMoveIsValid(direction, current)) {
+                open++;
+            }
         }
-        if (this.grid.get(current) instanceof Wall) {
-            return null;
-        }
-        sofar.add(new Location(current.getRow() - 1, current.getCol()));
-        ArrayList<Location> trynorth = getPath(new Location(current.getRow() - 1, current.getCol()), target, sofar);
-        sofar.remove(sofar.size() - 1);
-        sofar.add(new Location(current.getRow(), current.getCol() + 1));
-        ArrayList<Location> tryeast = getPath(new Location(current.getRow(), current.getCol() + 1), target, sofar);
-        sofar.remove(sofar.size() - 1);
-        sofar.add(new Location(current.getRow() + 1, current.getCol()));
-        ArrayList<Location> trysouth = getPath(new Location(current.getRow() + 1, current.getCol()), target, sofar);
-        sofar.remove(sofar.size() - 1);
-        sofar.add(new Location(current.getRow(), current.getCol() - 1));
-        ArrayList<Location> trywest = getPath(new Location(current.getRow(), current.getCol() - 1), target, sofar);
-        sofar.remove(sofar.size() - 1);
-        if (trynorth != null && trynorth.size() < sofar.size()) {
-            sofar = trynorth;
-        }
-        if (tryeast != null && tryeast.size() < sofar.size()) {
-            sofar = tryeast;
-        }
-        if (trysouth != null && trysouth.size() < sofar.size()) {
-            sofar = trysouth;
-        }
-        if (trywest != null && trywest.size() < sofar.size()) {
-            sofar = trywest;
-        }
-        return sofar;
+        return open > 2;
     }
 
-    public Location getOptimal(Location current) {
+    public Location directionMove(int direction, Location current) {
+        if (direction == 0) {
+            return new Location(current.getRow() - 1, current.getCol());
+        } else if (direction == 90) {
+            return new Location(current.getRow(), current.getCol() + 1);
+        } else if (direction == 180) {
+            return new Location(current.getRow() + 1, current.getCol());
+        } else {
+            return new Location(current.getRow(), current.getCol() - 1);
+        }
+    }
+
+    public boolean directionMoveIsValid(int direction, Location current) {
+        return !(grid.get(directionMove(direction, current)) instanceof Wall);
     }
 
 }

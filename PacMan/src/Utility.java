@@ -10,23 +10,18 @@ import info.gridworld.grid.Location;
 public class Utility {
 
     private static final int[] DIRECTIONS = {0, 90, 180, 270};
-    private Grid grid;
 
-    public Utility(Grid grid) {
-        this.grid = grid;
-    }
-
-    public boolean atIntersection(Location current) {
+    public static boolean atIntersection(Location current, Grid grid) {
         int open = 0;
         for (int direction : DIRECTIONS) {
-            if (directionMoveIsValid(direction, current)) {
+            if (directionMoveIsValid(direction, current, grid)) {
                 open++;
             }
         }
         return open > 2;
     }
 
-    public Location directionMove(int direction, Location current) {
+    public static Location directionMove(int direction, Location current, Grid grid) {
         if (direction == 0) {
             return new Location(current.getRow() - 1, current.getCol());
         } else if (direction == 90) {
@@ -38,43 +33,7 @@ public class Utility {
         }
     }
 
-    public boolean directionMoveIsValid(int direction, Location current) {
-        return !(grid.get(directionMove(direction, current)) instanceof Wall);
-    }
-
-    public Location optimalStep(Location current, Actor actor) {
-        Location target = current;
-        //If I'm adjacent to something I want to eat, go there instead. (2nd priority)
-        for (Object temploc : grid.getValidAdjacentLocations(current)) {
-            Location surrloc = (Location) temploc;
-            //if it's not a diagonal (can't go in diagonals :P)
-            if (surrloc.getRow() == current.getRow()
-                    || surrloc.getCol() == current.getCol()) {
-                if (actor instanceof PacMan) {
-                    PacMan pacman = (PacMan) actor;
-                    if (grid.get(surrloc) instanceof Pellet) {
-                        target = surrloc;
-                    } else if (pacman.isSuperPacMan() && grid.get(surrloc) instanceof Ghost) {
-                        target = surrloc;
-                    }
-                } else if (actor instanceof Ghost) {
-                    Ghost ghost = (Ghost) actor;
-                    if (!ghost.getPacMan().isSuperPacMan() && surrloc.equals(ghost.target())) {
-                        target = surrloc;
-                    }
-                }
-            }
-        }
-        //if I've cycled through everything and found nothing immediately near me, try again to a 2nd degree
-        if (target == current) {
-            for (Object temploc : grid.getValidAdjacentLocations(current)) {
-                Location surrloc = (Location) temploc;
-                if (optimalStep(surrloc, actor) != surrloc) {
-                    target = surrloc;
-                    break;
-                }
-            }
-        }
-        return target;
+    public static boolean directionMoveIsValid(int direction, Location current, Grid grid) {
+        return !(grid.get(directionMove(direction, current, grid)) instanceof Wall);
     }
 }

@@ -32,12 +32,16 @@ public class SourcedLocationStep extends Location {
         ArrayList<Location> sourcepath = new ArrayList<Location>();
         if (this.directlySourced()) {
             sourcepath.add(this.whereDidIComeFrom);
+        } else {
+            ArrayList<Location> presourcepath = ((SourcedLocationStep) this.whereDidIComeFrom).sourcePath();
+            for (Location source : presourcepath) {
+                sourcepath.add(source);
+            }
         }
-        sourcepath.add(0, this.source());
         return sourcepath;
     }
 
     public boolean directlySourced() {
-        return this.whereDidIComeFrom instanceof SourcedLocationStep;
+        return !(this.whereDidIComeFrom instanceof SourcedLocationStep);
     }
 }

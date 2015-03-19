@@ -134,7 +134,7 @@ public class PacMan extends Actor implements PacManInterface {
         }
 
         //If i'm next to something to eat, go there
-        if (this.pathstep > path.size()) {
+        if (this.pathstep >= path.size()) {
             this.pathstep = 0;
             this.path = optimalStepPath(this.getLocation(), new ArrayList<Location>());
         }
@@ -170,43 +170,6 @@ public class PacMan extends Actor implements PacManInterface {
         this.moveTo(target);
     }
 
-    /**
-     * Precondition: "current" doesn't have any adjacent pellets/ghosts ~
-     * Postcondition: this method does not return current
-     *
-     * @param current
-     * @param hasbeen
-     * @return
-     */
-    private Location optimalStep(Location current, ArrayList<Location> hasbeen) {
-        //Initialize what I need
-        int[] directions = {0, 90, 180, 270};
-        ArrayList<SourcedLocationStep> totest = new ArrayList<SourcedLocationStep>();
-        for (int direction : directions) {
-            //Only add it if it's a valid move
-            if (Utility.directionMoveIsValid(direction, current, grid)) {
-                totest.add(new SourcedLocationStep(Utility.directionMove(direction, current, grid), Utility.directionMove(direction, current, grid)));
-            }
-        }
-        //Run through the list of places to try
-        for (int i = 0; i < totest.size(); i++) {
-            //If there is a pellet there, return the first step i took in getting there
-            if (adjacentTest(totest.get(i)) != null) {
-                return totest.get(i).source();
-            } else {
-                //If there isn't, keep testing moves and adding them to the end to test later
-                for (int direction : directions) {
-                    //Only add it if it's a valid move
-                    if (Utility.directionMoveIsValid(direction, current, grid)) {
-                        totest.add(new SourcedLocationStep(Utility.directionMove(direction, totest.get(i), grid), totest.get(i)));
-                    }
-                }
-            }
-        }
-        //should not happen
-        return current;
-    }
-
     private ArrayList<Location> optimalStepPath(Location current, ArrayList<Location> hasbeen) {
         //Initialize what I need
         int[] directions = {0, 90, 180, 270};
@@ -221,7 +184,7 @@ public class PacMan extends Actor implements PacManInterface {
         for (int i = 0; i < totest.size(); i++) {
             //If there is a pellet there, return the first step i took in getting there
             if (adjacentTest(totest.get(i)) != null) {
-                return totest.get(i).source();
+                return totest.get(i).sourcePath();
             } else {
                 //If there isn't, keep testing moves and adding them to the end to test later
                 for (int direction : directions) {
@@ -232,8 +195,8 @@ public class PacMan extends Actor implements PacManInterface {
                 }
             }
         }
-        //should not happen
-        return current;
+        //really should not happen unless the game is finished
+        return totest.get(0).sourcePath();
     }
 
     private Location adjacentTest(Location current) {

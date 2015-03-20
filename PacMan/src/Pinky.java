@@ -3,6 +3,6 @@
  *
  * @author s-zhouj
  */
-public class Pinky extends Ghost implements GhostInterface {
+public class Pinky extends Ghost {
 
 }

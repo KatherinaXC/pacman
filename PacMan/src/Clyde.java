@@ -3,6 +3,6 @@
  *
  * @author s-zhouj
  */
-public class Clyde extends Ghost implements GhostInterface {
+public class Clyde extends Blinky {
 
 }

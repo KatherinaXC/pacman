@@ -117,6 +117,7 @@ public class PacMan extends Actor implements PacManInterface {
                     ghosts.add(grid.get(locs.get(i)));
                 }
             }
+            fullyInitialized = true;
         }
         Location target = this.getLocation();
 

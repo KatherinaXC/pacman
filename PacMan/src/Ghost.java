@@ -10,11 +10,14 @@ import java.awt.Color;
  */
 public class Ghost extends Actor implements GhostInterface {
 
+    //Grid fields
     private PacMan pacman;
 
+    //Personal fields
     private Color origColor;
     private GhostArea spawnLoc;
     private MyStats myStats;
+    private int scatterTimer;
 
     /**
      * Called after class creation to initialize a Ghost. Use
@@ -83,13 +86,24 @@ public class Ghost extends Actor implements GhostInterface {
     }
 
     /**
+     * Performs one step of action.
+     */
+    @Override
+    public void act() {
+
+    }
+
+    /**
      * Returns the target location that the ghost wants to get to.
      *
      * @return
      * @author Joyce
      */
-    public Location target() {
-        //TODO
+    public Location regularTarget() {
+        return this.getLocation();
+    }
+
+    public Location scatterTarget() {
         return this.getLocation();
     }
 

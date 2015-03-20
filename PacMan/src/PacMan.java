@@ -12,13 +12,14 @@ import java.util.Random;
  */
 public class PacMan extends Actor implements PacManInterface {
 
+    //Variables for keeping track of objects in the grid
     private ArrayList<Actor> pellets = new ArrayList<Actor>();
     private ArrayList<Actor> ghosts = new ArrayList<Actor>();
-    private Actor closestPellet = null;
+    private Grid<Actor> grid;
+
+    //Variables for keeping track of myself
     private ArrayList<Location> path = new ArrayList<Location>();
     private int pathstep = 0;
-
-    private Grid<Actor> grid;
     private MyStats myStats;
     private boolean amSuper = false;
     private Color defColor;
@@ -119,22 +120,6 @@ public class PacMan extends Actor implements PacManInterface {
         }
         Location target = this.getLocation();
         Random rand = new Random();
-        //Find the closest pellet
-        if (this.pellets.indexOf(closestPellet) < 0) {
-            //Find the new closest pellet, if i've already eaten the last one
-            this.closestPellet = this.pellets.get(pellets.size() - 1);
-            for (Actor pellet : this.pellets) {
-                if (Math.sqrt(
-                        Math.pow(pellet.getLocation().getRow() - this.getLocation().getRow(), 2)
-                        + Math.pow(pellet.getLocation().getCol() - this.getLocation().getCol(), 2)
-                ) < Math.sqrt(
-                        Math.pow(closestPellet.getLocation().getRow() - this.getLocation().getRow(), 2)
-                        + Math.pow(closestPellet.getLocation().getCol() - this.getLocation().getCol(), 2)
-                )) {
-                    closestPellet = pellet;
-                }
-            }
-        }
 
         //if there are any pellets left to eat
         if (pellets.size() > 0) {
@@ -147,7 +132,7 @@ public class PacMan extends Actor implements PacManInterface {
                 if (this.pathstep >= path.size()) {
                     //get a new path and reset my path progress
                     this.pathstep = 0;
-                    this.path = optimalStepPath(this.getLocation());
+                    this.path = optimalStepPath();
                 }
                 //follow the steps on my path
                 target = this.path.get(pathstep++);
@@ -183,13 +168,22 @@ public class PacMan extends Actor implements PacManInterface {
         this.moveTo(target);
     }
 
-    private ArrayList<Location> optimalStepPath(Location current) {
+    /**
+     * Finds a path for Pac-Man to follow, based on the current location. Uses a
+     * breadth-first search, filtering out steps that crash into walls and
+     * stopping a search when a scatterghost or pellet is found, then returning
+     * the sequence of steps taken to get there.
+     *
+     * @param current
+     * @return
+     */
+    private ArrayList<Location> optimalStepPath() {
         //Initialize what I need
         ArrayList<SourcedLocationStep> totest = new ArrayList<>();
         ArrayList<Location> solution = null;
         for (int direction : Utility.DIRECTIONS) {
-            if (Utility.directionMoveIsValid(direction, current, grid)) {
-                totest.add(new SourcedLocationStep(Utility.directionMove(direction, current, grid), null));
+            if (Utility.directionMoveIsValid(direction, this.getLocation(), grid)) {
+                totest.add(new SourcedLocationStep(Utility.directionMove(direction, this.getLocation(), grid), null));
             }
         }
         //Run through the list of places to try
@@ -202,13 +196,17 @@ public class PacMan extends Actor implements PacManInterface {
             } else {
                 //If there isn't, keep testing moves and adding them to the end to test later
                 for (int direction : Utility.DIRECTIONS) {
-                    //Only add it if it's a valid move and hasn't been used in this chain already
+                    //If it's a valid move
                     if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
                         SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0), grid), totest.get(0));
                         ArrayList<Location> leadupMap = temp.sourcePath();
                         leadupMap.remove(leadupMap.size() - 1);
-                        if (!containsTest(leadupMap, temp) && !current.equals(temp)) {
-                            totest.add(temp);
+                        //if it isn't contained in the current sequence already
+                        if (!containsTest(leadupMap, temp) && !this.getLocation().equals(temp)) {
+                            //if this won't lead me towards a ghost when i'm defenseless
+                            if (this.isSuperPacMan() || !(grid.get(temp) instanceof Ghost)) {
+                                totest.add(temp);
+                            }
                         }
                     }
                 }
@@ -216,14 +214,18 @@ public class PacMan extends Actor implements PacManInterface {
             //Remove the current element (it won't be tested again)
             totest.remove(0);
         }
-        if (solution != null) {
-            return solution;
-        }
-        ArrayList<Location> gameover = new ArrayList<Location>();
-        gameover.add(current);
-        return gameover;
+        return solution;
     }
 
+    /**
+     * Returns if tofind is part of list. Since an ArrayList's contain() method
+     * may not detect .equals() matches (and I really didn't look it up, sorry),
+     * this method is written SPECIFICALLY to detect matches based on .equals().
+     *
+     * @param list
+     * @param tofind
+     * @return
+     */
     private boolean containsTest(ArrayList<Location> list, Location tofind) {
         for (Location testing : list) {
             if (testing.equals(tofind)) {
@@ -233,6 +235,13 @@ public class PacMan extends Actor implements PacManInterface {
         return false;
     }
 
+    /**
+     * Returns the location of an edible if the given location is adjacent to
+     * one, otherwise returns null.
+     *
+     * @param current
+     * @return
+     */
     private Location adjacentTest(Location current) {
         //If I'm adjacent to something I want to eat, go there.
         for (Location surrloc : grid.getValidAdjacentLocations(current)) {

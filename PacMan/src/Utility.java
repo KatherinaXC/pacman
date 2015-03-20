@@ -4,6 +4,8 @@ import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
 
 /**
+ * A class to be used statically for Ghosts and PacMan, to assist with direction
+ * calculating and walltesting.
  *
  * @author Joyce
  */

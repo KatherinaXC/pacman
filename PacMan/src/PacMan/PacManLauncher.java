@@ -9,7 +9,7 @@ public class PacManLauncher {
          */
         PacManWorld pmw = new PacManWorld("src/PacMan/pacman.txt",
                 new String[]{"PacMan"},
-                new String[]{"Ghost"});
+                new String[]{"Blinky", "Clyde", "Inky", "Pinky"});
 
         pmw.show();
     }

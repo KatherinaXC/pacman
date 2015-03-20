@@ -2,12 +2,10 @@
 import info.gridworld.grid.Location;
 import java.util.ArrayList;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 /**
+ * A mod-"wrapper" class (is that what you'd call it?) that is effectively a
+ * Linked List for Locations. Actually, I might replace this class with a Linked
+ * List later. Eh.
  *
  * @author s-zhouj
  */
@@ -20,6 +18,11 @@ public class SourcedLocationStep extends Location {
         this.whereDidIComeFrom = whereDidIComeFrom;
     }
 
+    /**
+     * Returns the direct source of this step.
+     *
+     * @return
+     */
     public Location source() {
         if (!this.isBase()) {
             SourcedLocationStep temp = (SourcedLocationStep) whereDidIComeFrom;
@@ -28,6 +31,12 @@ public class SourcedLocationStep extends Location {
         return this;
     }
 
+    /**
+     * Returns an ArrayList containing all the steps up to and containing this
+     * one. Used to calculate a path for Ghosts and PacMan.
+     *
+     * @return
+     */
     public ArrayList<Location> sourcePath() {
         ArrayList<Location> sourcepath = new ArrayList<Location>();
         if (this.isBase()) {
@@ -44,6 +53,11 @@ public class SourcedLocationStep extends Location {
         return sourcepath;
     }
 
+    /**
+     * Returns if this SourcedLocationStep is standalone or has a previous step.
+     *
+     * @return
+     */
     public boolean isBase() {
         return this.whereDidIComeFrom == null;
     }

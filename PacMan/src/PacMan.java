@@ -119,7 +119,6 @@ public class PacMan extends Actor implements PacManInterface {
             }
         }
         Location target = this.getLocation();
-        Random rand = new Random();
 
         //if there are any pellets left to eat
         if (pellets.size() > 0) {
@@ -139,25 +138,19 @@ public class PacMan extends Actor implements PacManInterface {
             }
         }
 
-        //If the path want to take goes towards a ghost (and i'm not super), do something that won't lead me towards a ghost. (1st priority)
-        while (grid.get(target) instanceof Ghost && !this.isSuperPacMan()) {
-            this.setDirection(90 * rand.nextInt(4));
-            target = Utility.directionMove(this.getDirection(), this.getLocation(), grid);
-        }
-
-        //If I will-eat/ate an edible, count that and remove it from the pelletlist.
+        //Reactions to potential things that I may hit
         if (grid.get(target) instanceof Pellet) {
-            if (grid.get(target) instanceof PowerPellet) {
+            if (grid.get(target) instanceof PowerPellet) { //A power pellet
                 this.myStats.addSuper();
                 this.superPacMan(true, this);
-            } else {
+            } else { //a regular pellet
                 this.myStats.scorePellet();
             }
-            this.pellets.remove(grid.get(target));
-        } else if (grid.get(target) instanceof Ghost) {
-            if (this.isSuperPacMan()) {
+            this.pellets.remove(grid.get(target)); //remove eaten pellets from my list
+        } else if (grid.get(target) instanceof Ghost) { //if i hit a ghost...
+            if (this.isSuperPacMan()) { //when i'm super:
                 this.myStats.scoreAteGhost(grid.get(target));
-            } else {
+            } else { //when i'm not super: (this is BAD and shouldn't run, ever)
                 this.myStats.died();
                 this.eaten();
             }
@@ -199,6 +192,7 @@ public class PacMan extends Actor implements PacManInterface {
                     //If it's a valid move
                     if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
                         SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0), grid), totest.get(0));
+
                         ArrayList<Location> leadupMap = temp.sourcePath();
                         leadupMap.remove(leadupMap.size() - 1);
                         //if it isn't contained in the current sequence already

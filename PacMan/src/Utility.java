@@ -9,7 +9,7 @@ import info.gridworld.grid.Location;
  */
 public class Utility {
 
-    private static final int[] DIRECTIONS = {0, 90, 180, 270};
+    public static final int[] DIRECTIONS = {0, 90, 180, 270};
 
     public static boolean atIntersection(Location current, Grid grid) {
         int open = 0;

@@ -22,6 +22,7 @@ public class PacMan extends Actor implements PacManInterface {
     private MyStats myStats;
     private boolean amSuper = false;
     private Color defColor;
+    private boolean fullyInitialized = false;
 
     /**
      * Called after class creation to initialize a Pac-Man. Do not put your
@@ -52,18 +53,6 @@ public class PacMan extends Actor implements PacManInterface {
         this.grid = grid;
         this.putSelfInGrid(grid, lctn);
         this.setDirection(Location.EAST);
-        //Read through the grid to get locations for pellets and ghosts
-        ArrayList<Location> locs = grid.getOccupiedLocations();
-        for (int i = 0; i < locs.size(); i++) {
-            //if it's a pellet or power pellet (power pellets extend pellet)
-            if (grid.get(locs.get(i)) instanceof Pellet) {
-                pellets.add(grid.get(locs.get(i)));
-            }
-            //if it's a ghost
-            if (grid.get(locs.get(i)) instanceof Ghost) {
-                ghosts.add(grid.get(locs.get(i)));
-            }
-        }
     }
 
     /**
@@ -114,7 +103,21 @@ public class PacMan extends Actor implements PacManInterface {
      */
     @Override
     public void act() {
-        Location target = null;
+        if (!fullyInitialized) {
+            //I can't do this earlier since every object is placed on the board in-order
+            //Read through the grid to get locations for pellets and ghosts
+            ArrayList<Location> locs = grid.getOccupiedLocations();
+            for (int i = 0; i < locs.size(); i++) {
+                if (grid.get(locs.get(i)) instanceof Pellet) {
+                    //if it's a pellet or power pellet (power pellets extend pellet)
+                    pellets.add(grid.get(locs.get(i)));
+                } else if (grid.get(locs.get(i)) instanceof Ghost) {
+                    //if it's a pellet or power pellet (power pellets extend pellet)
+                    ghosts.add(grid.get(locs.get(i)));
+                }
+            }
+        }
+        Location target = this.getLocation();
         Random rand = new Random();
         //Find the closest pellet
         if (this.pellets.indexOf(closestPellet) < 0) {
@@ -133,13 +136,23 @@ public class PacMan extends Actor implements PacManInterface {
             }
         }
 
-        //If i'm next to something to eat, go there
-        if (this.pathstep >= path.size()) {
-            this.pathstep = 0;
-            this.path = optimalStepPath(this.getLocation(), new ArrayList<Location>());
+        //if there are any pellets left to eat
+        if (pellets.size() > 0) {
+            //If i'm next to something
+            if (adjacentTest(this.getLocation()) != null) {
+                target = adjacentTest(this.getLocation());
+                pathstep = Integer.MAX_VALUE;
+            } else {
+                //if i'm not next to something and have walked through my path (or didn't have one)
+                if (this.pathstep >= path.size()) {
+                    //get a new path and reset my path progress
+                    this.pathstep = 0;
+                    this.path = optimalStepPath(this.getLocation());
+                }
+                //follow the steps on my path
+                target = this.path.get(pathstep++);
+            }
         }
-        target = this.path.get(pathstep);
-        this.pathstep++;
 
         //If the path want to take goes towards a ghost (and i'm not super), do something that won't lead me towards a ghost. (1st priority)
         while (grid.get(target) instanceof Ghost && !this.isSuperPacMan()) {
@@ -147,7 +160,7 @@ public class PacMan extends Actor implements PacManInterface {
             target = Utility.directionMove(this.getDirection(), this.getLocation(), grid);
         }
 
-        //If I ate a pellet, count that and remove it from the pelletlist.
+        //If I will-eat/ate an edible, count that and remove it from the pelletlist.
         if (grid.get(target) instanceof Pellet) {
             if (grid.get(target) instanceof PowerPellet) {
                 this.myStats.addSuper();
@@ -170,33 +183,54 @@ public class PacMan extends Actor implements PacManInterface {
         this.moveTo(target);
     }
 
-    private ArrayList<Location> optimalStepPath(Location current, ArrayList<Location> hasbeen) {
+    private ArrayList<Location> optimalStepPath(Location current) {
         //Initialize what I need
-        int[] directions = {0, 90, 180, 270};
-        ArrayList<SourcedLocationStep> totest = new ArrayList<SourcedLocationStep>();
-        for (int direction : directions) {
-            //Only add it if it's a valid move
+        ArrayList<SourcedLocationStep> totest = new ArrayList<>();
+        ArrayList<Location> solution = null;
+        for (int direction : Utility.DIRECTIONS) {
             if (Utility.directionMoveIsValid(direction, current, grid)) {
-                totest.add(new SourcedLocationStep(Utility.directionMove(direction, current, grid), Utility.directionMove(direction, current, grid)));
+                totest.add(new SourcedLocationStep(Utility.directionMove(direction, current, grid), null));
             }
         }
         //Run through the list of places to try
-        for (int i = 0; i < totest.size(); i++) {
-            //If there is a pellet there, return the first step i took in getting there
-            if (adjacentTest(totest.get(i)) != null) {
-                return totest.get(i).sourcePath();
+        while (totest.size() > 0) {
+            //If there is a pellet next to me, return the path that I took in getting there
+            if (adjacentTest(totest.get(0)) != null) {
+                solution = totest.get(0).sourcePath();
+                solution.add(adjacentTest(totest.get(0)));
+                break;
             } else {
                 //If there isn't, keep testing moves and adding them to the end to test later
-                for (int direction : directions) {
-                    //Only add it if it's a valid move
-                    if (Utility.directionMoveIsValid(direction, current, grid)) {
-                        totest.add(new SourcedLocationStep(Utility.directionMove(direction, totest.get(i), grid), totest.get(i)));
+                for (int direction : Utility.DIRECTIONS) {
+                    //Only add it if it's a valid move and hasn't been used in this chain already
+                    if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
+                        SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0), grid), totest.get(0));
+                        ArrayList<Location> leadupMap = temp.sourcePath();
+                        leadupMap.remove(leadupMap.size() - 1);
+                        if (!containsTest(leadupMap, temp) && !current.equals(temp)) {
+                            totest.add(temp);
+                        }
                     }
                 }
             }
+            //Remove the current element (it won't be tested again)
+            totest.remove(0);
         }
-        //really should not happen unless the game is finished
-        return totest.get(0).sourcePath();
+        if (solution != null) {
+            return solution;
+        }
+        ArrayList<Location> gameover = new ArrayList<Location>();
+        gameover.add(current);
+        return gameover;
+    }
+
+    private boolean containsTest(ArrayList<Location> list, Location tofind) {
+        for (Location testing : list) {
+            if (testing.equals(tofind)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Location adjacentTest(Location current) {

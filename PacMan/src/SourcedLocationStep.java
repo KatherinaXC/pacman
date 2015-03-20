@@ -21,27 +21,30 @@ public class SourcedLocationStep extends Location {
     }
 
     public Location source() {
-        if (!this.directlySourced()) {
+        if (!this.isBase()) {
             SourcedLocationStep temp = (SourcedLocationStep) whereDidIComeFrom;
             return temp.source();
         }
-        return whereDidIComeFrom;
+        return this;
     }
 
     public ArrayList<Location> sourcePath() {
         ArrayList<Location> sourcepath = new ArrayList<Location>();
-        if (this.directlySourced()) {
-            sourcepath.add(this.whereDidIComeFrom);
+        if (this.isBase()) {
+            ArrayList<Location> temp = new ArrayList<Location>();
+            temp.add(this);
+            return temp;
         } else {
             ArrayList<Location> presourcepath = ((SourcedLocationStep) this.whereDidIComeFrom).sourcePath();
             for (Location source : presourcepath) {
                 sourcepath.add(source);
             }
+            sourcepath.add(this);
         }
         return sourcepath;
     }
 
-    public boolean directlySourced() {
-        return !(this.whereDidIComeFrom instanceof SourcedLocationStep);
+    public boolean isBase() {
+        return this.whereDidIComeFrom == null;
     }
 }

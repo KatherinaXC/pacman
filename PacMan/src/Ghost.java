@@ -182,4 +182,12 @@ public class Ghost extends Actor implements GhostInterface {
     public PacMan getPacMan() {
         return this.pacman;
     }
+    
+    /**
+     * Returns the grid, for the child classes to use.
+     * @return 
+     */
+    public Grid getGrid() {
+        return this.grid;
+    }
 }

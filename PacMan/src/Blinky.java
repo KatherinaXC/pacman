@@ -12,7 +12,6 @@ public class Blinky extends Ghost {
      * regular mode.
      *
      * @return
-     * @author Joyce
      */
     public Location regularTarget() {
         return getPacMan().getLocation();
@@ -25,6 +24,6 @@ public class Blinky extends Ghost {
      * @return
      */
     public Location scatterTarget() {
-        return this.getLocation();
+        return new Location(1, 1);
     }
 }

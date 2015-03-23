@@ -19,10 +19,10 @@ public class Ghost extends Actor implements GhostInterface {
     //Personal fields
     private Color origColor;
     private MyStats myStats;
-    private int scatterTimer = 0;
     private boolean fullyInitialized = false;
-    private int pathstep = Integer.MAX_VALUE;
-    private ArrayList<Location> path = null;
+    private Pellet pickedUp = null;
+    private Location pickedUpLoc = null;
+    private int scatterTimer = 0;
 
     /**
      * Called after class creation to initialize a Ghost. Use
@@ -90,113 +90,53 @@ public class Ghost extends Actor implements GhostInterface {
      * Performs one step of action.
      */
     @Override
-    public void act() {/*
-         Location target = this.getLocation();
-         if (!fullyInitialized) {
-         //I can't do this earlier since every object is placed on the board in-order
-         //Read through the grid to get the location of PacMan
-         ArrayList<Location> locs = grid.getOccupiedLocations();
-         for (Location location : locs) {
-         if (grid.get(location) instanceof PacMan) {
-         this.pacman = (PacMan) grid.get(location);
-         }
-         }
-         fullyInitialized = true;
-         }
-
-         if (this.pathstep >= path.size() || getPacMan().isSuperPacMan()) {
-         //get a new path and reset my path progress
-         this.pathstep = 0;
-         this.path = optimalStepPath();
-         }
-         //follow the steps on my path
-         target = this.path.get(pathstep++);
-         this.myStats.moved();
-
-         //Reactions to potential things that I may hit
-         if (grid.get(target) instanceof PacMan) {
-         if (this.pacman.isSuperPacMan()) { //Eaten by a superPacMan
-         this.myStats.scoreAteGhost(this);
-         this.eaten();
-         } else { //Eating a regular PacMan
-         this.myStats.scoreAtePacman();
-         pacman.eaten();
-         }
-         }
-
-         //Set direction and make final move
-         this.setDirection(this.getLocation().getDirectionToward(target));
-         this.moveTo(target);*/
-
-    }
-
-    /**
-     * Finds a path for the Ghost to follow. If there's no possible path, then
-     * return null.
-     *
-     * @return
-     */
-    private ArrayList<Location> optimalStepPath() {
-        //Initialize what I need
-        ArrayList<SourcedLocationStep> totest = new ArrayList<>();
-        ArrayList<Location> solution = null;
-        //Exclude the current-opposing-facing direction.
-        for (int direction : Utility.DIRECTIONS) {
-            if (Utility.directionMoveIsValid(direction, this.getLocation(), grid) && !Utility.directionIsOpposite(direction, this.getDirection())) {
-                totest.add(new SourcedLocationStep(Utility.directionMove(direction, this.getLocation(), grid), null));
-            }
-        }
-        //Run through the list of places to try
-        while (totest.size() > 0) {
-            //If there is my target next to me, return the path that I took in getting there
-            if (adjacentTest(totest.get(0)) != null) {
-                solution = totest.get(0).sourcePath();
-                solution.add(adjacentTest(totest.get(0)));
-                break;
-            } else {
-                //If there isn't, keep testing moves and adding them to the end to test later
-                for (int direction : Utility.DIRECTIONS) {
-                    //If it's a valid move
-                    if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
-                        SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0), grid), totest.get(0));
-                        ArrayList<Location> leadupMap = temp.sourcePath();
-                        leadupMap.remove(leadupMap.size() - 1);
-                        //if it isn't contained in the current sequence already
-                        if (!Utility.containsTest(leadupMap, temp) && !this.getLocation().equals(temp)) {
-                            //if this won't lead me towards PacMan when i'm defenseless
-                            if (pacman.isSuperPacMan() || !(grid.get(temp) instanceof PacMan)) {
-                                totest.add(temp);
-                            }
-                        }
-                    }
+    public void act() {
+        Location metatarget = this.getLocation();
+        Location directtarget = Utility.directionMove(this.getDirection(), this.getLocation(), grid);
+        Pellet tempPickedUp = null;
+        Location tempPickedUpLoc = null;
+        if (!fullyInitialized) {
+            //I can't do this earlier since every object is placed on the board in-order
+            //Read through the grid to get the location of PacMan
+            ArrayList<Location> locs = grid.getOccupiedLocations();
+            for (Location location : locs) {
+                if (grid.get(location) instanceof PacMan) {
+                    this.pacman = (PacMan) grid.get(location);
                 }
             }
-            //Remove the current element (it won't be tested again)
-            totest.remove(0);
+            fullyInitialized = true;
         }
-        return solution;
-    }
 
-    /**
-     * Returns the location of the target if it's is adjacent to the given
-     * location, otherwise returns null.
-     *
-     * @param current
-     * @return
-     */
-    private Location adjacentTest(Location current) {
-        //If I'm adjacent to something I want to eat, go there.
-        for (Object surrloct : grid.getValidAdjacentLocations(current)) {
-            Location surrloc = (Location) surrloct;
-            //if it's not a diagonal (can't go in diagonals :P)
-            if (surrloc.getRow() == current.getRow()
-                    || surrloc.getCol() == current.getCol()) {
-                if (grid.get(surrloc).equals(this.getTarget())) {
-                    return surrloc;
-                }
+        //Find the metastep closest to pacman
+        ArrayList<Location> metalist = Utility.validSurrounding(directtarget, grid);
+        metalist.remove(this.getLocation());
+        metatarget = Utility.closestLocation(metalist, this.getPacMan().getLocation());
+
+        //Reactions to potential things that I may hit
+        if (grid.get(directtarget) instanceof PacMan) {
+            if (this.pacman.isSuperPacMan()) { //Eaten by a superPacMan
+                this.myStats.scoreAteGhost(this);
+                this.eaten();
+            } else { //Eating a regular PacMan
+                this.myStats.scoreAtePacman();
+                pacman.eaten();
             }
+        } else if (grid.get(directtarget) instanceof Pellet) { //Pick up a pellet
+            tempPickedUp = (Pellet) grid.get(metatarget);
+            tempPickedUpLoc = metatarget;
         }
-        return null;
+
+        //Set direction and make final move
+        this.moveTo(directtarget);
+        this.setDirection(this.getLocation().getDirectionToward(metatarget));
+
+        //If I picked up a pellet earlier, drop it
+        if (pickedUp != null) {
+            pickedUp.putSelfInGrid(grid, pickedUpLoc);
+            //Then replace the variables
+            pickedUp = tempPickedUp;
+            pickedUpLoc = tempPickedUpLoc;
+        }
     }
 
     /**

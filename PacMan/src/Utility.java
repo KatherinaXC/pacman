@@ -24,22 +24,38 @@ public class Utility {
         return open > 2;
     }
 
+    public static ArrayList<Location> validSurrounding(Location current, Grid grid) {
+        ArrayList<Location> solutionlist = new ArrayList<Location>();
+        for (int direction : DIRECTIONS) {
+            if (Utility.directionMoveIsValid(direction, current, grid)) {
+                solutionlist.add(Utility.directionMove(direction, current, grid));
+            }
+        }
+        return solutionlist;
+    }
+
     public static Location directionMove(int direction, Location current, Grid grid) {
+        Location target = null;
         if (direction == 0) {
-            return new Location(current.getRow() - 1, current.getCol());
+            target = new Location(current.getRow() - 1, current.getCol());
         } else if (direction == 90) {
-            return new Location(current.getRow(), current.getCol() + 1);
+            target = new Location(current.getRow(), current.getCol() + 1);
         } else if (direction == 180) {
-            return new Location(current.getRow() + 1, current.getCol());
+            target = new Location(current.getRow() + 1, current.getCol());
         } else {
-            return new Location(current.getRow(), current.getCol() - 1);
+            target = new Location(current.getRow(), current.getCol() - 1);
+        }
+        if (!(grid.get(target) instanceof Wall)) {
+            return target;
+        } else {
+            return current;
         }
     }
 
     public static boolean directionMoveIsValid(int direction, Location current, Grid grid) {
         return !(grid.get(directionMove(direction, current, grid)) instanceof Wall);
     }
-    
+
     public static boolean directionIsOpposite(int direction1, int direction2) {
         return Math.abs(direction1 - direction2) != 180;
     }
@@ -60,5 +76,21 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    public static Location closestLocation(ArrayList<Location> list, Location target) {
+        int closestdistance = Integer.MAX_VALUE;
+        Location closest = null;
+        for (Location testing : list) {
+            if (manhattanDistance(testing, target) < closestdistance) {
+                closestdistance = manhattanDistance(testing, target);
+                closest = testing;
+            }
+        }
+        return closest;
+    }
+
+    public static int manhattanDistance(Location location1, Location location2) {
+        return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol());
     }
 }

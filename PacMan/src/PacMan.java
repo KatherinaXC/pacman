@@ -13,7 +13,7 @@ import java.util.Random;
 public class PacMan extends Actor implements PacManInterface {
 
     //Variables for keeping track of objects in the grid
-    private ArrayList<Actor> pellets = new ArrayList<Actor>();
+    private ArrayList<Location> pellets = new ArrayList<Location>();
     private ArrayList<Actor> ghosts = new ArrayList<Actor>();
     private Grid<Actor> grid;
 
@@ -70,7 +70,6 @@ public class PacMan extends Actor implements PacManInterface {
         if (actor == this) {
             this.amSuper = bln;
             if (bln) {
-                myStats.addSuper();
                 this.setColor(Color.BLUE);
             } else {
                 this.setColor(this.defColor);
@@ -112,7 +111,7 @@ public class PacMan extends Actor implements PacManInterface {
             for (int i = 0; i < locs.size(); i++) {
                 if (grid.get(locs.get(i)) instanceof Pellet) {
                     //if it's a pellet or power pellet (power pellets extend pellet)
-                    pellets.add(grid.get(locs.get(i)));
+                    pellets.add(locs.get(i));
                 } else if (grid.get(locs.get(i)) instanceof Ghost) {
                     //if it's a pellet or power pellet (power pellets extend pellet)
                     ghosts.add(grid.get(locs.get(i)));
@@ -144,11 +143,10 @@ public class PacMan extends Actor implements PacManInterface {
         if (grid.get(target) instanceof Pellet) {
             if (grid.get(target) instanceof PowerPellet) { //A power pellet
                 this.myStats.addSuper();
-                this.superPacMan(true, this);
             } else { //a regular pellet
                 this.myStats.scorePellet();
             }
-            this.pellets.remove(grid.get(target)); //remove eaten pellets from my list
+            this.pellets.remove(target); //remove eaten pellets from my list
         } else if (grid.get(target) instanceof Ghost) { //if i hit a ghost...
             Ghost ghost = (Ghost) grid.get(target);
             if (this.isSuperPacMan()) { //when i'm super:

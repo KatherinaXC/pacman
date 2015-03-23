@@ -2,6 +2,7 @@
 import info.gridworld.actor.Actor;
 import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
+import java.util.ArrayList;
 
 /**
  * A class to be used statically for Ghosts and PacMan, to assist with direction
@@ -37,5 +38,27 @@ public class Utility {
 
     public static boolean directionMoveIsValid(int direction, Location current, Grid grid) {
         return !(grid.get(directionMove(direction, current, grid)) instanceof Wall);
+    }
+    
+    public static boolean directionIsOpposite(int direction1, int direction2) {
+        return Math.abs(direction1 - direction2) != 180;
+    }
+
+    /**
+     * Returns if tofind is part of list. Since an ArrayList's contain() method
+     * may not detect .equals() matches (and I really didn't look it up, sorry),
+     * this method is written SPECIFICALLY to detect matches based on .equals().
+     *
+     * @param list
+     * @param tofind
+     * @return
+     */
+    public static boolean containsTest(ArrayList<Location> list, Location tofind) {
+        for (Location testing : list) {
+            if (testing.equals(tofind)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

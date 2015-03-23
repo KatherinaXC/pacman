@@ -104,6 +104,7 @@ public class PacMan extends Actor implements PacManInterface {
      */
     @Override
     public void act() {
+        Location target = this.getLocation();
         if (!fullyInitialized) {
             //I can't do this earlier since every object is placed on the board in-order
             //Read through the grid to get locations for pellets and ghosts
@@ -119,7 +120,6 @@ public class PacMan extends Actor implements PacManInterface {
             }
             fullyInitialized = true;
         }
-        Location target = this.getLocation();
 
         //if there are any pellets left to eat
         if (pellets.size() > 0) {
@@ -136,6 +136,7 @@ public class PacMan extends Actor implements PacManInterface {
                 }
                 //follow the steps on my path
                 target = this.path.get(pathstep++);
+                this.myStats.moved();
             }
         }
 
@@ -149,8 +150,10 @@ public class PacMan extends Actor implements PacManInterface {
             }
             this.pellets.remove(grid.get(target)); //remove eaten pellets from my list
         } else if (grid.get(target) instanceof Ghost) { //if i hit a ghost...
+            Ghost ghost = (Ghost) grid.get(target);
             if (this.isSuperPacMan()) { //when i'm super:
-                this.myStats.scoreAteGhost(grid.get(target));
+                this.myStats.scoreAteGhost(ghost);
+                ghost.eaten();
             } else { //when i'm not super: (this is BAD and shouldn't run, ever)
                 this.myStats.died();
                 this.eaten();
@@ -193,11 +196,10 @@ public class PacMan extends Actor implements PacManInterface {
                     //If it's a valid move
                     if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
                         SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0), grid), totest.get(0));
-
                         ArrayList<Location> leadupMap = temp.sourcePath();
                         leadupMap.remove(leadupMap.size() - 1);
                         //if it isn't contained in the current sequence already
-                        if (!containsTest(leadupMap, temp) && !this.getLocation().equals(temp)) {
+                        if (!Utility.containsTest(leadupMap, temp) && !this.getLocation().equals(temp)) {
                             //if this won't lead me towards a ghost when i'm defenseless
                             if (this.isSuperPacMan() || !(grid.get(temp) instanceof Ghost)) {
                                 totest.add(temp);
@@ -210,24 +212,6 @@ public class PacMan extends Actor implements PacManInterface {
             totest.remove(0);
         }
         return solution;
-    }
-
-    /**
-     * Returns if tofind is part of list. Since an ArrayList's contain() method
-     * may not detect .equals() matches (and I really didn't look it up, sorry),
-     * this method is written SPECIFICALLY to detect matches based on .equals().
-     *
-     * @param list
-     * @param tofind
-     * @return
-     */
-    private boolean containsTest(ArrayList<Location> list, Location tofind) {
-        for (Location testing : list) {
-            if (testing.equals(tofind)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

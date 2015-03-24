@@ -13,8 +13,8 @@ public class Ghost extends Actor implements GhostInterface {
 
     //Grid fields
     private Grid grid;
-    private PacMan pacman;
     private GhostArea spawnLoc;
+    private PacMan pacman;
 
     //Personal fields
     private Color origColor;
@@ -91,10 +91,6 @@ public class Ghost extends Actor implements GhostInterface {
      */
     @Override
     public void act() {
-        Location metatarget = this.getLocation();
-        Location directtarget = Utility.directionMove(this.getDirection(), this.getLocation(), grid);
-        Pellet tempPickedUp = null;
-        Location tempPickedUpLoc = null;
         if (!fullyInitialized) {
             //I can't do this earlier since every object is placed on the board in-order
             //Read through the grid to get the location of PacMan
@@ -107,13 +103,21 @@ public class Ghost extends Actor implements GhostInterface {
             fullyInitialized = true;
         }
 
-        //Find the metastep closest to pacman
+        Location metatarget = this.getLocation();
+        Location directtarget = Utility.directionMove(this.getDirection(), this.getLocation(), grid);
+        Pellet tempPickedUp = null;
+        Location tempPickedUpLoc = null;
+
+        //Find the metastep closest to my target
         ArrayList<Location> metalist = Utility.validSurrounding(directtarget, grid);
-        metalist.remove(this.getLocation());
-        metatarget = Utility.closestLocation(metalist, this.getPacMan().getLocation());
+        metalist = Utility.removeEquivalent(metalist, this.getLocation());
+        metatarget = Utility.closestLocation(metalist, this.getTarget());
 
         //Reactions to potential things that I may hit
-        if (grid.get(directtarget) instanceof PacMan) {
+        if (grid.get(directtarget) instanceof Pellet) { //Pick up a pellet
+            tempPickedUp = (Pellet) grid.get(directtarget);
+            tempPickedUpLoc = directtarget;
+        } else if (grid.get(directtarget) instanceof PacMan) { //Crash into a PacMan
             if (this.pacman.isSuperPacMan()) { //Eaten by a superPacMan
                 this.myStats.scoreAteGhost(this);
                 this.eaten();
@@ -121,9 +125,6 @@ public class Ghost extends Actor implements GhostInterface {
                 this.myStats.scoreAtePacman();
                 pacman.eaten();
             }
-        } else if (grid.get(directtarget) instanceof Pellet) { //Pick up a pellet
-            tempPickedUp = (Pellet) grid.get(metatarget);
-            tempPickedUpLoc = metatarget;
         }
 
         //Set direction and make final move
@@ -133,10 +134,10 @@ public class Ghost extends Actor implements GhostInterface {
         //If I picked up a pellet earlier, drop it
         if (pickedUp != null) {
             pickedUp.putSelfInGrid(grid, pickedUpLoc);
-            //Then replace the variables
-            pickedUp = tempPickedUp;
-            pickedUpLoc = tempPickedUpLoc;
         }
+        //Replace the pelletvariables
+        this.pickedUp = tempPickedUp;
+        this.pickedUpLoc = tempPickedUpLoc;
     }
 
     /**
@@ -182,10 +183,11 @@ public class Ghost extends Actor implements GhostInterface {
     public PacMan getPacMan() {
         return this.pacman;
     }
-    
+
     /**
      * Returns the grid, for the child classes to use.
-     * @return 
+     *
+     * @return
      */
     public Grid getGrid() {
         return this.grid;

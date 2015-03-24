@@ -84,7 +84,6 @@ public class PacMan extends Actor implements PacManInterface {
      */
     @Override
     public void eaten() {
-        myStats.died();
         this.removeSelfFromGrid();
     }
 
@@ -103,7 +102,6 @@ public class PacMan extends Actor implements PacManInterface {
      */
     @Override
     public void act() {
-        Location target = this.getLocation();
         if (!fullyInitialized) {
             //I can't do this earlier since every object is placed on the board in-order
             //Read through the grid to get locations for pellets and ghosts
@@ -119,6 +117,8 @@ public class PacMan extends Actor implements PacManInterface {
             }
             fullyInitialized = true;
         }
+
+        Location target = this.getLocation();
 
         //if there are any pellets left to eat
         if (pellets.size() > 0) {
@@ -154,7 +154,6 @@ public class PacMan extends Actor implements PacManInterface {
                 ghost.eaten();
             } else { //when i'm not super: (this is BAD and shouldn't run, ever)
                 this.myStats.died();
-                this.eaten();
             }
         }
 

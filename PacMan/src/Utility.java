@@ -93,4 +93,26 @@ public class Utility {
     public static int manhattanDistance(Location location1, Location location2) {
         return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol());
     }
+
+    public static ArrayList<Location> removeEquivalent(ArrayList<Location> list, Location loc) {
+        ArrayList<Location> out = (ArrayList<Location>) list.clone();
+        for (int i = 0; i < list.size(); i++) {
+            if (loc.equals(list.get(i))) {
+                out.remove(i);
+            }
+        }
+        return out;
+    }
+
+    public static ArrayList<Location> filter(ArrayList<Location> places, ArrayList<Actor> dontwant) {
+        ArrayList<Location> out = (ArrayList<Location>) places.clone();
+        for (int i = 0; i < places.size(); i++) {
+            for (Actor thing : dontwant) {
+                if (thing.getLocation().equals(places.get(i))) {
+                    out.remove(i);
+                }
+            }
+        }
+        return out;
+    }
 }

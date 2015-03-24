@@ -90,11 +90,22 @@ public class Utility {
         return closest;
     }
 
-    public static int manhattanDistance(Location location1, Location location2) {
-        return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol());
+    public static double manhattanDistance(Location location1, Location location2) {
+        return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol()) * 1.;
     }
 
-    public static ArrayList<Location> removeEquivalent(ArrayList<Location> list, Location loc) {
+    public static double euclideanDistance(Location closestPellet, Location pellet) {
+        return Math.sqrt(
+                Math.pow(pellet.getRow() - this.getRow(), 2)
+                + Math.pow(pellet.getCol() - this.getCol(), 2)
+        ) < Math.sqrt(
+                Math.pow(closestPellet.getRow() - this.getRow(), 2)
+                + Math.pow(closestPellet.getCol() - this.getCol(), 2)
+        )
+    }
+}
+
+public static ArrayList<Location> removeEquivalent(ArrayList<Location> list, Location loc) {
         ArrayList<Location> out = (ArrayList<Location>) list.clone();
         for (int i = 0; i < list.size(); i++) {
             if (loc.equals(list.get(i))) {

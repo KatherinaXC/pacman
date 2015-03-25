@@ -14,10 +14,10 @@ public class Inky extends Ghost {
      * @return
      */
     public Location regularTarget() {
-        if (Utility.manhattanDistance(this.getLocation(), getPacMan().getLocation()) < 8) {
-            return super.regularTarget();
-        }
-        return scatterTarget();
+        Location pacman = getPacMan().getLocation();
+        Location blinky = getBlinky().getLocation();
+        return new Location(2 * pacman.getRow() - blinky.getRow(),
+                2 * pacman.getCol() - blinky.getCol());
     }
 
     /**
@@ -27,6 +27,6 @@ public class Inky extends Ghost {
      * @return
      */
     public Location scatterTarget() {
-        return new Location(1, getGrid().getNumCols());
+        return new Location(getGrid().getNumRows(), 0);
     }
 }

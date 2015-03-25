@@ -24,6 +24,6 @@ public class Blinky extends Ghost {
      * @return
      */
     public Location scatterTarget() {
-        return new Location(1, 1);
+        return new Location(0, getGrid().getNumCols());
     }
 }

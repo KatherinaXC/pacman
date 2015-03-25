@@ -84,6 +84,7 @@ public class PacMan extends Actor implements PacManInterface {
      */
     @Override
     public void eaten() {
+        this.myStats.died();
         this.removeSelfFromGrid();
     }
 
@@ -140,20 +141,18 @@ public class PacMan extends Actor implements PacManInterface {
         }
 
         //Reactions to potential things that I may hit
-        if (grid.get(target) instanceof Pellet) {
-            if (grid.get(target) instanceof PowerPellet) { //A power pellet
-                this.myStats.addSuper();
-            } else { //a regular pellet
-                this.myStats.scorePellet();
-            }
-            this.pellets.remove(target); //remove eaten pellets from my list
+        if (grid.get(target) instanceof Pellet) { //if I hit a pellet...
+            scorePellet((Pellet) grid.get(target));
         } else if (grid.get(target) instanceof Ghost) { //if i hit a ghost...
             Ghost ghost = (Ghost) grid.get(target);
-            if (this.isSuperPacMan()) { //when i'm super:
+            if (this.myStats.anySuperTime()) { //when i'm super:
                 this.myStats.scoreAteGhost(ghost);
                 ghost.eaten();
-            } else { //when i'm not super: (this is BAD and shouldn't run, ever)
-                this.myStats.died();
+                if (ghost.getHeldPellet() != null) {
+                    scorePellet(ghost.getHeldPellet());
+                }
+            } else { //when i'm not super:
+                this.eaten();
             }
         }
 
@@ -177,7 +176,7 @@ public class PacMan extends Actor implements PacManInterface {
         ArrayList<Location> solution = null;
         for (int direction : Utility.DIRECTIONS) {
             if (Utility.directionMoveIsValid(direction, this.getLocation(), grid)) {
-                totest.add(new SourcedLocationStep(Utility.directionMove(direction, this.getLocation(), grid), null));
+                totest.add(new SourcedLocationStep(Utility.directionMove(direction, this.getLocation()), null));
             }
         }
         //Run through the list of places to try
@@ -192,7 +191,7 @@ public class PacMan extends Actor implements PacManInterface {
                 for (int direction : Utility.DIRECTIONS) {
                     //If it's a valid move
                     if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
-                        SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0), grid), totest.get(0));
+                        SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0)), totest.get(0));
                         ArrayList<Location> leadupMap = temp.sourcePath();
                         leadupMap.remove(leadupMap.size() - 1);
                         //if it isn't contained in the current sequence already
@@ -209,6 +208,15 @@ public class PacMan extends Actor implements PacManInterface {
             totest.remove(0);
         }
         return solution;
+    }
+
+    private void scorePellet(Pellet pellet) {
+        if (pellet instanceof PowerPellet) { //A power pellet
+            this.myStats.addSuper();
+        } else { //a regular pellet
+            this.myStats.scorePellet();
+        }
+        this.pellets.remove(pellet); //remove eaten pellets from my list}
     }
 
     /**

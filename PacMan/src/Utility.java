@@ -28,32 +28,26 @@ public class Utility {
         ArrayList<Location> solutionlist = new ArrayList<Location>();
         for (int direction : DIRECTIONS) {
             if (Utility.directionMoveIsValid(direction, current, grid)) {
-                solutionlist.add(Utility.directionMove(direction, current, grid));
+                solutionlist.add(Utility.directionMove(direction, current));
             }
         }
         return solutionlist;
     }
 
-    public static Location directionMove(int direction, Location current, Grid grid) {
-        Location target = null;
+    public static Location directionMove(int direction, Location current) {
         if (direction == 0) {
-            target = new Location(current.getRow() - 1, current.getCol());
+            return new Location(current.getRow() - 1, current.getCol());
         } else if (direction == 90) {
-            target = new Location(current.getRow(), current.getCol() + 1);
+            return new Location(current.getRow(), current.getCol() + 1);
         } else if (direction == 180) {
-            target = new Location(current.getRow() + 1, current.getCol());
+            return new Location(current.getRow() + 1, current.getCol());
         } else {
-            target = new Location(current.getRow(), current.getCol() - 1);
-        }
-        if (!(grid.get(target) instanceof Wall)) {
-            return target;
-        } else {
-            return current;
+            return new Location(current.getRow(), current.getCol() - 1);
         }
     }
 
     public static boolean directionMoveIsValid(int direction, Location current, Grid grid) {
-        return !(grid.get(directionMove(direction, current, grid)) instanceof Wall);
+        return !(grid.get(directionMove(direction, current)) instanceof Wall);
     }
 
     public static boolean directionIsOpposite(int direction1, int direction2) {
@@ -79,11 +73,11 @@ public class Utility {
     }
 
     public static Location closestLocation(ArrayList<Location> list, Location target) {
-        int closestdistance = Integer.MAX_VALUE;
+        double closestdistance = Integer.MAX_VALUE;
         Location closest = null;
         for (Location testing : list) {
-            if (manhattanDistance(testing, target) < closestdistance) {
-                closestdistance = manhattanDistance(testing, target);
+            if (euclideanDistance(testing, target) < closestdistance) {
+                closestdistance = euclideanDistance(testing, target);
                 closest = testing;
             }
         }
@@ -94,18 +88,14 @@ public class Utility {
         return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol()) * 1.;
     }
 
-    public static double euclideanDistance(Location closestPellet, Location pellet) {
+    public static double euclideanDistance(Location location1, Location location2) {
         return Math.sqrt(
-                Math.pow(pellet.getRow() - this.getRow(), 2)
-                + Math.pow(pellet.getCol() - this.getCol(), 2)
-        ) < Math.sqrt(
-                Math.pow(closestPellet.getRow() - this.getRow(), 2)
-                + Math.pow(closestPellet.getCol() - this.getCol(), 2)
-        )
+                Math.pow(location1.getRow() - location2.getRow(), 2)
+                + Math.pow(location1.getCol() - location2.getCol(), 2)
+        );
     }
-}
 
-public static ArrayList<Location> removeEquivalent(ArrayList<Location> list, Location loc) {
+    public static ArrayList<Location> removeEquivalent(ArrayList<Location> list, Location loc) {
         ArrayList<Location> out = (ArrayList<Location>) list.clone();
         for (int i = 0; i < list.size(); i++) {
             if (loc.equals(list.get(i))) {

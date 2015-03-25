@@ -27,6 +27,6 @@ public class Clyde extends Blinky {
      * @return
      */
     public Location scatterTarget() {
-        return new Location(getGrid().getNumRows(), getGrid().getNumRows());
+        return new Location(getGrid().getNumRows(), getGrid().getNumCols());
     }
 }

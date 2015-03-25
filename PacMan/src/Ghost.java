@@ -15,6 +15,7 @@ public class Ghost extends Actor implements GhostInterface {
     private Grid grid;
     private GhostArea spawnLoc;
     private PacMan pacman;
+    private Actor blinky; //for the use of Inky
 
     //Personal fields
     private Color origColor;
@@ -99,27 +100,35 @@ public class Ghost extends Actor implements GhostInterface {
                 if (grid.get(location) instanceof PacMan) {
                     this.pacman = (PacMan) grid.get(location);
                 }
+                if (grid.get(location) instanceof Blinky) {
+                    this.blinky = (Blinky) grid.get(location);
+                    fullyInitialized = true;
+                }
             }
-            fullyInitialized = true;
         }
 
-        Location metatarget = this.getLocation();
-        Location directtarget = Utility.directionMove(this.getDirection(), this.getLocation(), grid);
+        Location directtarget = this.getLocation();
+        if (Utility.directionMoveIsValid(this.getDirection(), this.getLocation(), grid)) {
+            directtarget = Utility.directionMove(this.getDirection(), this.getLocation());
+        }
         Pellet tempPickedUp = null;
         Location tempPickedUpLoc = null;
 
         //Find the metastep closest to my target
         ArrayList<Location> metalist = Utility.validSurrounding(directtarget, grid);
-        metalist = Utility.removeEquivalent(metalist, this.getLocation());
-        metatarget = Utility.closestLocation(metalist, this.getTarget());
+        metalist.remove(this.getLocation());
+        Location metatarget = Utility.closestLocation(metalist, this.getTarget());
+        //If I'm stuck, then set metatarget so that I'll rotate
+        if (metatarget == null) {
+            metatarget = Utility.directionMove(this.getDirection() + 90, directtarget);
+        }
 
         //Reactions to potential things that I may hit
         if (grid.get(directtarget) instanceof Pellet) { //Pick up a pellet
             tempPickedUp = (Pellet) grid.get(directtarget);
             tempPickedUpLoc = directtarget;
         } else if (grid.get(directtarget) instanceof PacMan) { //Crash into a PacMan
-            if (this.pacman.isSuperPacMan()) { //Eaten by a superPacMan
-                this.myStats.scoreAteGhost(this);
+            if (this.myStats.anySuperTime()) { //Eaten by a superPacMan
                 this.eaten();
             } else { //Eating a regular PacMan
                 this.myStats.scoreAtePacman();
@@ -127,9 +136,10 @@ public class Ghost extends Actor implements GhostInterface {
             }
         }
 
-        //Set direction and make final move
+        //Set direction and make final move, log it
         this.moveTo(directtarget);
         this.setDirection(this.getLocation().getDirectionToward(metatarget));
+        this.myStats.moved();
 
         //If I picked up a pellet earlier, drop it
         if (pickedUp != null) {
@@ -147,7 +157,7 @@ public class Ghost extends Actor implements GhostInterface {
      * @return
      */
     public Location getTarget() {
-        if (myStats.anySuperTime()) {
+        if (this.myStats.anySuperTime() || getPacMan().getLocation() == null) {
             return scatterTarget();
         } else {
             return regularTarget();
@@ -185,11 +195,29 @@ public class Ghost extends Actor implements GhostInterface {
     }
 
     /**
+     * Returns Blinky, for Inky to use in targetfinding.
+     *
+     * @return
+     */
+    public Actor getBlinky() {
+        return this.blinky;
+    }
+
+    /**
      * Returns the grid, for the child classes to use.
      *
      * @return
      */
     public Grid getGrid() {
         return this.grid;
+    }
+
+    /**
+     * Returns the pellet that is currently underneath the ghost (if any).
+     *
+     * @return
+     */
+    public Pellet getHeldPellet() {
+        return this.pickedUp;
     }
 }

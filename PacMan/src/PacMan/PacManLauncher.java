@@ -10,7 +10,7 @@ public class PacManLauncher {
         //Alternate board is "src/PacMan/pacman_altboard.txt"
         PacManWorld pmw = new PacManWorld("src/PacMan/pacman.txt",
                 new String[]{"PacMan"},
-                new String[]{"Blinky", "Clyde", "Inky", "Pinky"});
+                new String[]{"Blinky", "Pinky", "Inky", "Clyde"});
 
         pmw.show();
     }

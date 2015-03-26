@@ -19,7 +19,7 @@ public class PacMan extends Actor implements PacManInterface {
 
     //Variables for keeping track of myself
     private ArrayList<Location> path = new ArrayList<Location>();
-    private int pathstep = 0;
+    private int pathstep = Integer.MAX_VALUE;
     private MyStats myStats;
     private boolean amSuper = false;
     private Color defColor;
@@ -145,13 +145,14 @@ public class PacMan extends Actor implements PacManInterface {
             scorePellet((Pellet) grid.get(target));
         } else if (grid.get(target) instanceof Ghost) { //if i hit a ghost...
             Ghost ghost = (Ghost) grid.get(target);
-            if (this.myStats.anySuperTime()) { //when i'm super:
-                this.myStats.scoreAteGhost(ghost);
-                ghost.eaten();
+            if (ghost.getScaredStatus()) { //if this ghost is scared of me:
+                //get its held pellet
                 if (ghost.getHeldPellet() != null) {
                     scorePellet(ghost.getHeldPellet());
                 }
-            } else { //when i'm not super:
+                this.myStats.scoreAteGhost(ghost);
+                ghost.eaten();
+            } else { //if i'm not super or the ghost is regular:
                 this.eaten();
             }
         }

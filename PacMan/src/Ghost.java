@@ -15,6 +15,7 @@ public class Ghost extends Actor implements GhostInterface {
     private Grid grid;
     private GhostArea spawnLoc;
     private PacMan pacman;
+    private ArrayList<Actor> ghosts = new ArrayList<Actor>();
     private Actor blinky; //for the use of Inky
 
     //Personal fields
@@ -24,6 +25,10 @@ public class Ghost extends Actor implements GhostInterface {
     private Pellet pickedUp = null;
     private Location pickedUpLoc = null;
     private int scatterTimer = 0;
+    private boolean amScared = false;
+
+    //Static final fields
+    public static final int ACTIVE_GHOSTS = 4;
 
     /**
      * Called after class creation to initialize a Ghost. Use
@@ -66,9 +71,16 @@ public class Ghost extends Actor implements GhostInterface {
      */
     @Override
     public void eaten() {
-        myStats.died();
+        //Do appearance stuff
         this.removeSelfFromGrid();
+        myStats.died();
         spawnLoc.add(this);
+        this.setColor(origColor);
+        //Change my scared status (resets when I'm in the GA)
+        this.amScared = false;
+        //Drop any pellets I am holding
+        this.pickedUp = null;
+        this.pickedUpLoc = null;
     }
 
     /**
@@ -85,6 +97,7 @@ public class Ghost extends Actor implements GhostInterface {
         } else {
             this.setColor(origColor);
         }
+        this.amScared = bln;
     }
 
     /**
@@ -100,11 +113,20 @@ public class Ghost extends Actor implements GhostInterface {
                 if (grid.get(location) instanceof PacMan) {
                     this.pacman = (PacMan) grid.get(location);
                 }
+                if (grid.get(location) instanceof Ghost) {
+                    this.ghosts.add((Actor) grid.get(location));
+                }
                 if (grid.get(location) instanceof Blinky) {
                     this.blinky = (Blinky) grid.get(location);
-                    fullyInitialized = true;
                 }
             }
+            if (ghosts.size() == ACTIVE_GHOSTS) {
+                fullyInitialized = true;
+            }
+        }
+
+        if (this.getLocation() == null) {
+            return;
         }
 
         Location directtarget = this.getLocation();
@@ -116,7 +138,10 @@ public class Ghost extends Actor implements GhostInterface {
 
         //Find the metastep closest to my target
         ArrayList<Location> metalist = Utility.validSurrounding(directtarget, grid);
+        //Filter out my location
         metalist.remove(this.getLocation());
+        //Filter out other ghosts' locations
+        metalist = Utility.filter(metalist, ghosts);
         Location metatarget = Utility.closestLocation(metalist, this.getTarget());
         //If I'm stuck, then set metatarget so that I'll rotate
         if (metatarget == null) {
@@ -128,9 +153,9 @@ public class Ghost extends Actor implements GhostInterface {
             tempPickedUp = (Pellet) grid.get(directtarget);
             tempPickedUpLoc = directtarget;
         } else if (grid.get(directtarget) instanceof PacMan) { //Crash into a PacMan
-            if (this.myStats.anySuperTime()) { //Eaten by a superPacMan
+            if (this.amScared) { //Eaten when I'm scared
                 this.eaten();
-            } else { //Eating a regular PacMan
+            } else { //Eating a regular PacMan (when I'm in normal state)
                 this.myStats.scoreAtePacman();
                 pacman.eaten();
             }
@@ -157,7 +182,7 @@ public class Ghost extends Actor implements GhostInterface {
      * @return
      */
     public Location getTarget() {
-        if (this.myStats.anySuperTime() || getPacMan().getLocation() == null) {
+        if (this.amScared || this.getPacMan().getLocation() == null) {
             return scatterTarget();
         } else {
             return regularTarget();
@@ -219,5 +244,14 @@ public class Ghost extends Actor implements GhostInterface {
      */
     public Pellet getHeldPellet() {
         return this.pickedUp;
+    }
+
+    /**
+     * Returns if this ghost is currently in scared mode.
+     *
+     * @return
+     */
+    public boolean getScaredStatus() {
+        return this.amScared;
     }
 }

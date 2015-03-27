@@ -103,6 +103,7 @@ public class PacMan extends Actor implements PacManInterface {
      */
     @Override
     public void act() {
+        boolean haveDied = false;
         if (!fullyInitialized) {
             //I can't do this earlier since every object is placed on the board in-order
             //Read through the grid to get locations for pellets and ghosts
@@ -121,26 +122,24 @@ public class PacMan extends Actor implements PacManInterface {
 
         Location target = this.getLocation();
 
-        //if there are any pellets left to eat
-        if (pellets.size() > 0) {
+        if (adjacentTest(this.getLocation()) != null) {
             //If i'm next to something
-            if (adjacentTest(this.getLocation()) != null) {
-                target = adjacentTest(this.getLocation());
-                pathstep = Integer.MAX_VALUE;
-            } else {
-                //if i'm not next to something and have walked through my path (or didn't have one)
-                if (this.pathstep >= path.size()) {
-                    //get a new path and reset my path progress
-                    this.pathstep = 0;
-                    this.path = optimalStepPath();
-                }
-                //follow the steps on my path
-                target = this.path.get(pathstep++);
-                this.myStats.moved();
+            target = adjacentTest(this.getLocation());
+            pathstep = Integer.MAX_VALUE;
+        } else {
+            //if i'm not next to something and have walked through my path, or am within 10 MHsteps of a ghost
+            if (this.pathstep >= path.size()
+                    || Utility.containsTestActor(Utility.withinRadius(this.getLocation(), 10, grid), ghosts)) {
+                //get a new path and reset my path progress
+                this.pathstep = 0;
+                this.path = optimalStepPath();
             }
+            //follow the steps on my path
+            target = this.path.get(pathstep++);
+            this.myStats.moved();
         }
 
-        //Reactions to potential things that I may hit
+        //Reactions to potential things that I may hit, after final target
         if (grid.get(target) instanceof Pellet) { //if I hit a pellet...
             scorePellet((Pellet) grid.get(target));
         } else if (grid.get(target) instanceof Ghost) { //if i hit a ghost...
@@ -154,12 +153,15 @@ public class PacMan extends Actor implements PacManInterface {
                 ghost.eaten();
             } else { //if i'm not super or the ghost is regular:
                 this.eaten();
+                haveDied = true;
             }
         }
 
-        //Set my direction and make my final move.
-        this.setDirection(this.getLocation().getDirectionToward(target));
-        this.moveTo(target);
+        if (!haveDied) {
+            //Set my direction and make my final move.
+            this.setDirection(this.getLocation().getDirectionToward(target));
+            this.moveTo(target);
+        }
     }
 
     /**
@@ -196,7 +198,7 @@ public class PacMan extends Actor implements PacManInterface {
                         ArrayList<Location> leadupMap = temp.sourcePath();
                         leadupMap.remove(leadupMap.size() - 1);
                         //if it isn't contained in the current sequence already
-                        if (!Utility.containsTest(leadupMap, temp) && !this.getLocation().equals(temp)) {
+                        if (!leadupMap.contains(temp) && !this.getLocation().equals(temp)) {
                             //if this won't lead me towards a ghost when i'm defenseless
                             if (this.isSuperPacMan() || !(grid.get(temp) instanceof Ghost)) {
                                 totest.add(temp);
@@ -217,7 +219,7 @@ public class PacMan extends Actor implements PacManInterface {
         } else { //a regular pellet
             this.myStats.scorePellet();
         }
-        this.pellets.remove(pellet); //remove eaten pellets from my list}
+        this.pellets.remove(pellet.getLocation()); //remove eaten pellets from my list}
     }
 
     /**

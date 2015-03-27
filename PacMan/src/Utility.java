@@ -55,21 +55,36 @@ public class Utility {
     }
 
     /**
-     * Returns if tofind is part of list. Since an ArrayList's contain() method
-     * may not detect .equals() matches (and I really didn't look it up, sorry),
-     * this method is written SPECIFICALLY to detect matches based on .equals().
+     * Returns if any elements of tofind are part of list, using two ArrayLists
+     * of locations.
      *
      * @param list
      * @param tofind
      * @return
      */
-    public static boolean containsTest(ArrayList<Location> list, Location tofind) {
-        for (Location testing : list) {
-            if (testing.equals(tofind)) {
+    public static boolean containsTest(ArrayList<Location> list, ArrayList<Location> tofind) {
+        for (int i = 0; i < tofind.size(); i++) {
+            if (list.contains(tofind.get(i))) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Returns if any elements of tofind are part of list, using a tofind of
+     * Actor.
+     *
+     * @param list
+     * @param tofind
+     * @return
+     */
+    public static boolean containsTestActor(ArrayList<Location> list, ArrayList<Actor> tofind) {
+        ArrayList<Location> templist = new ArrayList<Location>();
+        for (Actor temp : tofind) {
+            templist.add(temp.getLocation());
+        }
+        return Utility.containsTest(list, templist);
     }
 
     public static Location closestLocation(ArrayList<Location> list, Location target) {
@@ -85,7 +100,7 @@ public class Utility {
     }
 
     public static double manhattanDistance(Location location1, Location location2) {
-        return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol()) * 1.;
+        return Math.abs(location1.getRow() - location2.getRow()) + Math.abs(location1.getCol() - location2.getCol());
     }
 
     public static double euclideanDistance(Location location1, Location location2) {
@@ -106,14 +121,24 @@ public class Utility {
     }
 
     public static ArrayList<Location> filter(ArrayList<Location> places, ArrayList<Actor> dontwant) {
-        ArrayList<Location> out = (ArrayList<Location>) places.clone();
-        for (int i = 0; i < places.size(); i++) {
-            for (Actor thing : dontwant) {
-                if (thing.getLocation().equals(places.get(i))) {
-                    out.remove(i);
+        ArrayList<Location> result = (ArrayList<Location>) places.clone();
+        for (int i = places.size() - 1; i >= 0; i--) {
+            for (Actor checking : dontwant) {
+                if (checking.getLocation() != null && checking.getLocation().equals(places.get(i))) {
+                    result.remove(i);
                 }
             }
         }
-        return out;
+        return result;
+    }
+
+    public static ArrayList<Location> withinRadius(Location whereIAm, int distance, Grid grid) {
+        ArrayList<Location> results = new ArrayList<Location>();
+        for (Location testing : (ArrayList<Location>) grid.getOccupiedLocations()) {
+            if (Utility.manhattanDistance(whereIAm, testing) <= distance) {
+                results.add(testing);
+            }
+        }
+        return results;
     }
 }

@@ -71,13 +71,13 @@ public class Ghost extends Actor implements GhostInterface {
      */
     @Override
     public void eaten() {
-        //Do appearance stuff
+        //Do grid location stuff
+        this.myStats.died();
         this.removeSelfFromGrid();
-        myStats.died();
-        spawnLoc.add(this);
-        this.setColor(origColor);
-        //Change my scared status (resets when I'm in the GA)
+        this.spawnLoc.add(this);
+        //Change my scared status + color (resets when I'm in the GA)
         this.amScared = false;
+        this.setColor(origColor);
         //Drop any pellets I am holding
         this.pickedUp = null;
         this.pickedUpLoc = null;
@@ -94,6 +94,7 @@ public class Ghost extends Actor implements GhostInterface {
     public void superPacMan(boolean bln) {
         if (bln) {
             this.setColor(Color.BLUE);
+            this.setDirection((this.getDirection() + 180) % 360);
         } else {
             this.setColor(origColor);
         }
@@ -105,6 +106,7 @@ public class Ghost extends Actor implements GhostInterface {
      */
     @Override
     public void act() {
+        boolean haveDied = false;
         if (!fullyInitialized) {
             //I can't do this earlier since every object is placed on the board in-order
             //Read through the grid to get the location of PacMan
@@ -116,7 +118,7 @@ public class Ghost extends Actor implements GhostInterface {
                 if (grid.get(location) instanceof Ghost) {
                     this.ghosts.add((Actor) grid.get(location));
                 }
-                if (grid.get(location) instanceof Blinky) {
+                if (grid.get(location) instanceof Blinky && !(grid.get(location) instanceof Clyde)) {
                     this.blinky = (Blinky) grid.get(location);
                 }
             }
@@ -130,41 +132,46 @@ public class Ghost extends Actor implements GhostInterface {
         }
 
         Location directtarget = this.getLocation();
-        if (Utility.directionMoveIsValid(this.getDirection(), this.getLocation(), grid)) {
-            directtarget = Utility.directionMove(this.getDirection(), this.getLocation());
+        Location forward = Utility.directionMove(this.getDirection(), this.getLocation());
+        //If it's not a wall and if I won't crash into a ghost, move directly forward
+        if (Utility.directionMoveIsValid(this.getDirection(), this.getLocation(), grid) && !(grid.get(forward) instanceof Ghost)) {
+            directtarget = forward;
         }
         Pellet tempPickedUp = null;
         Location tempPickedUpLoc = null;
 
-        //Find the metastep closest to my target
-        ArrayList<Location> metalist = Utility.validSurrounding(directtarget, grid);
-        //Filter out my location
-        metalist.remove(this.getLocation());
-        //Filter out other ghosts' locations
-        metalist = Utility.filter(metalist, ghosts);
-        Location metatarget = Utility.closestLocation(metalist, this.getTarget());
-        //If I'm stuck, then set metatarget so that I'll rotate
-        if (metatarget == null) {
-            metatarget = Utility.directionMove(this.getDirection() + 90, directtarget);
-        }
-
-        //Reactions to potential things that I may hit
+        //Reactions to potential things that I may hit (after the direct target is finalized)
         if (grid.get(directtarget) instanceof Pellet) { //Pick up a pellet
             tempPickedUp = (Pellet) grid.get(directtarget);
             tempPickedUpLoc = directtarget;
         } else if (grid.get(directtarget) instanceof PacMan) { //Crash into a PacMan
             if (this.amScared) { //Eaten when I'm scared
                 this.eaten();
+                haveDied = true;
             } else { //Eating a regular PacMan (when I'm in normal state)
                 this.myStats.scoreAtePacman();
                 pacman.eaten();
             }
         }
 
-        //Set direction and make final move, log it
-        this.moveTo(directtarget);
-        this.setDirection(this.getLocation().getDirectionToward(metatarget));
-        this.myStats.moved();
+        //Find the metastep closest to my target (in prep for the next step)
+        ArrayList<Location> metalist = Utility.validSurrounding(directtarget, grid);
+        //Filter out my location
+        metalist.remove(this.getLocation());
+        //Filter out other ghosts' locations
+        metalist = Utility.filter(metalist, ghosts);
+        Location metatarget = Utility.closestLocation(metalist, this.getTarget());
+        //If I'm stuck, then set metatarget so that I'll rotate right
+        if (metatarget == null) {
+            metatarget = Utility.directionMove((this.getDirection() + 90) % 360, directtarget);
+        }
+
+        if (!haveDied) {
+            //Set direction and make final move, log it
+            this.moveTo(directtarget);
+            this.setDirection(this.getLocation().getDirectionToward(metatarget));
+            this.myStats.moved();
+        }
 
         //If I picked up a pellet earlier, drop it
         if (pickedUp != null) {
@@ -182,7 +189,7 @@ public class Ghost extends Actor implements GhostInterface {
      * @return
      */
     public Location getTarget() {
-        if (this.amScared || this.getPacMan().getLocation() == null) {
+        if (this.amScared || this.getPacMan() == null || this.getPacMan().getLocation() == null) {
             return scatterTarget();
         } else {
             return regularTarget();

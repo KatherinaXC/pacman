@@ -4,6 +4,7 @@ import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  *
@@ -163,7 +164,12 @@ public class Ghost extends Actor implements GhostInterface {
         Location metatarget = Utility.closestLocation(metalist, this.getTarget());
         //If I'm stuck, then set metatarget so that I'll rotate right
         if (metatarget == null) {
-            metatarget = Utility.directionMove((this.getDirection() + 90) % 360, directtarget);
+            Random rand = new Random();
+            int turndirection = 0;
+            do {
+                turndirection = rand.nextInt(2) - 1;
+            } while (turndirection != 0);
+            metatarget = Utility.directionMove((this.getDirection() + 90 * turndirection) % 360, directtarget);
         }
 
         if (!haveDied) {

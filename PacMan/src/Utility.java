@@ -122,12 +122,8 @@ public class Utility {
 
     public static ArrayList<Location> filter(ArrayList<Location> places, ArrayList<Actor> dontwant) {
         ArrayList<Location> result = (ArrayList<Location>) places.clone();
-        for (int i = places.size() - 1; i >= 0; i--) {
-            for (Actor checking : dontwant) {
-                if (checking.getLocation() != null && checking.getLocation().equals(places.get(i))) {
-                    result.remove(i);
-                }
-            }
+        for (Actor checking : dontwant) {
+            result.remove(checking.getLocation());
         }
         return result;
     }

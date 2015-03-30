@@ -7,6 +7,7 @@ public class PacManLauncher {
      * GhostInterface based classes respectively.
      */
     public static void main(String[] args) {
+        //Main board is "src/PacMan/pacman.txt"
         //Alternate board is "src/PacMan/pacman_altboard.txt"
         PacManWorld pmw = new PacManWorld("src/PacMan/pacman.txt",
                 new String[]{"PacMan"},

@@ -172,6 +172,7 @@ public class Ghost extends Actor implements GhostInterface {
             metatarget = Utility.directionMove((this.getDirection() + 90 * turndirection) % 360, directtarget);
         }
 
+        //if I haven't died from the move that I'd make
         if (!haveDied) {
             //Set direction and make final move, log it
             this.moveTo(directtarget);

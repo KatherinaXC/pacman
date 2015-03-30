@@ -15,9 +15,15 @@ public class Inky extends Ghost {
      */
     public Location regularTarget() {
         Location pacman = getPacMan().getLocation();
-        Location blinky = getBlinky().getLocation();
-        return new Location(2 * pacman.getRow() - blinky.getRow(),
-                2 * pacman.getCol() - blinky.getCol());
+        if (getBlinky() == null) {
+            //if Blinky is on the board, then return the proper target
+            Location blinky = getBlinky().getLocation();
+            return new Location(2 * pacman.getRow() - blinky.getRow(),
+                    2 * pacman.getCol() - blinky.getCol());
+        } else {
+            //Otherwise Inky should chase PacMan directly
+            return pacman;
+        }
     }
 
     /**
@@ -27,6 +33,6 @@ public class Inky extends Ghost {
      * @return
      */
     public Location scatterTarget() {
-        return new Location(getGrid().getNumRows(), 0);
+        return new Location(getGrid().getNumRows() - 1, 0);
     }
 }

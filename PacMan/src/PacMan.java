@@ -213,6 +213,13 @@ public class PacMan extends Actor implements PacManInterface {
         return solution;
     }
 
+    /**
+     * Call the required methods associated with eating the given pellet. This
+     * method is called when PacMan runs into a pellet of any type, or a ghost
+     * that has a pellet under/with it.
+     *
+     * @param pellet
+     */
     private void scorePellet(Pellet pellet) {
         if (pellet instanceof PowerPellet) { //A power pellet
             this.myStats.addSuper();

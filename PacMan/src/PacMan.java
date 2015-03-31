@@ -4,7 +4,6 @@ import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  *
@@ -132,7 +131,7 @@ public class PacMan extends Actor implements PacManInterface {
                     || Utility.containsTestActor(Utility.withinRadius(this.getLocation(), 10, grid), ghosts)) {
                 //get a new path and reset my path progress
                 this.pathstep = 0;
-                this.path = optimalStepPath();
+                this.path = aStarOptimalPath();
             }
             //follow the steps on my path
             target = this.path.get(pathstep++);
@@ -175,11 +174,11 @@ public class PacMan extends Actor implements PacManInterface {
      */
     private ArrayList<Location> optimalStepPath() {
         //Initialize what I need
-        ArrayList<SourcedLocationStep> totest = new ArrayList<>();
+        ArrayList<NodeLocation> totest = new ArrayList<>();
         ArrayList<Location> solution = null;
         for (int direction : Utility.DIRECTIONS) {
             if (Utility.directionMoveIsValid(direction, this.getLocation(), grid)) {
-                totest.add(new SourcedLocationStep(Utility.directionMove(direction, this.getLocation()), null));
+                totest.add(new NodeLocation(Utility.directionMove(direction, this.getLocation()), null, this.grid));
             }
         }
         //Run through the list of places to try
@@ -194,7 +193,7 @@ public class PacMan extends Actor implements PacManInterface {
                 for (int direction : Utility.DIRECTIONS) {
                     //If it's a valid move
                     if (Utility.directionMoveIsValid(direction, totest.get(0), grid)) {
-                        SourcedLocationStep temp = new SourcedLocationStep(Utility.directionMove(direction, totest.get(0)), totest.get(0));
+                        NodeLocation temp = new NodeLocation(Utility.directionMove(direction, totest.get(0)), totest.get(0), this.grid);
                         ArrayList<Location> leadupMap = temp.sourcePath();
                         leadupMap.remove(leadupMap.size() - 1);
                         //if it isn't contained in the current sequence already
@@ -209,6 +208,59 @@ public class PacMan extends Actor implements PacManInterface {
             }
             //Remove the current element (it won't be tested again)
             totest.remove(0);
+        }
+        return solution;
+    }
+
+    /**
+     * Finds a path for Pac-Man to follow, based on the current location, using
+     * A* search algorithm.
+     *
+     * @param current
+     * @return
+     */
+    private ArrayList<Location> aStarOptimalPath(Location target) {
+        //Initialize the open list (places not yet attempted)
+        ArrayList<Location> openlist = new ArrayList<>();
+        for (int row = 0; row < this.grid.getNumRows(); row++) {
+            for (int col = 0; col < this.grid.getNumCols(); col++) {
+                openlist.add(new Location(row, col));
+            }
+        }
+        //initialize the closed list (places already tried) (somewhat modded, since start shouldn't be part of the path)
+        ArrayList<NodeLocation> closedlist = new ArrayList<>();
+        for (int direction : Utility.DIRECTIONS) {
+            if (Utility.directionMoveIsValid(direction, this.getLocation(), grid)) {
+                closedlist.add(new NodeLocation(Utility.directionMove(direction, this.getLocation()), null, this.grid));
+            }
+        }
+        ArrayList<Location> solution = null;
+
+        //Run through the list of places to try
+        while (openlist.size() > 0) {
+            //If there is a pellet next to me, return the path that I took in getting there
+            if (adjacentTest(openlist.get(0)) != null) {
+
+            } else {
+                //If there isn't, keep testing moves and adding them to the end to test later
+                for (int direction : Utility.DIRECTIONS) {
+                    //If it's a valid move
+                    if (Utility.directionMoveIsValid(direction, openlist.get(0), grid)) {
+                        NodeLocation temp = new NodeLocation(Utility.directionMove(direction, openlist.get(0)), openlist.get(0), this.grid);
+                        ArrayList<Location> leadupMap = temp.sourcePath();
+                        leadupMap.remove(leadupMap.size() - 1);
+                        //if it isn't contained in the current sequence already
+                        if (!leadupMap.contains(temp) && !this.getLocation().equals(temp)) {
+                            //if this won't lead me towards a ghost when i'm defenseless
+                            if (this.isSuperPacMan() || !(grid.get(temp) instanceof Ghost)) {
+                                openlist.add(temp);
+                            }
+                        }
+                    }
+                }
+            }
+            //Remove the current element (it won't be tested again)
+            openlist.remove(0);
         }
         return solution;
     }

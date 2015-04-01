@@ -129,14 +129,16 @@ public class PacMan extends Actor implements PacManInterface {
         Location target = this.getLocation();
 
         //if i've walked through my path, have no path, or am within 20 MHsteps of a ghost
-        if (this.pathstep >= path.size()
+        if (path == null || this.pathstep >= path.size()
                 || Utility.containsTestActor(Utility.withinRadius(this.getLocation(), 20, grid), ghosts)) {
             //get a new path and reset my path progress            
-            this.path = aStarOptimalPath(this.closestPellet);
+            this.path = AStarPath(this.closestPellet);
             this.pathstep = 0;
         }
-        //follow the steps on my path
-        target = this.path.get(pathstep++);
+        if (path != null) {
+            //follow the steps on my path
+            target = this.path.get(pathstep++);
+        }
 
         //Reactions to potential things that I may hit, after final target
         if (grid.get(target) instanceof Pellet) { //if I hit a pellet...
@@ -171,7 +173,7 @@ public class PacMan extends Actor implements PacManInterface {
      * @param current
      * @return
      */
-    public ArrayList<Location> aStarOptimalPath(Location target) {
+    public ArrayList<Location> AStarPath(Location target) {
         //Initialize the open list with my current location (places temp attempted)
         ArrayList<NodeLocation> openlist = new ArrayList<>();
         openlist.add(new NodeLocation(this.getLocation(), null, this.grid));
@@ -196,21 +198,23 @@ public class PacMan extends Actor implements PacManInterface {
             //Iterate through the surrounding spaces
             for (Location temp : Utility.validSurrounding(tempcheapestnode, grid)) {
                 NodeLocation tempnode = new NodeLocation(temp, tempcheapestnode, grid);
-                if (grid.get(tempnode) instanceof Warp) {
-                    tempnode = new NodeLocation(Utility.warpAlternate(tempnode, grid), tempcheapestnode, grid);
-                }
-                if (tempnode.equals(target)) {
-                    //if it's the solution, then return the path
-                    solution = tempnode.sourcePath();
-                    break;
-                }
-                if (!(openlist.contains(tempnode)
-                        && openlist.get(openlist.indexOf(tempnode)).getCost(target) < tempnode.getCost(target))) {
-                    //if there isn't already a cheaper version of this node on the openlist
-                    if (!(closedlist.contains(tempnode)
-                            && closedlist.get(closedlist.indexOf(tempnode)).getCost(target) < tempnode.getCost(target))) {
-                        //if there isn't already a cheaper version of this node on the closedlist too
-                        openlist.add(tempnode);
+                if (!tempcheapestnode.sourcePath().contains(temp)) {
+                    if (grid.get(tempnode) instanceof Warp) {
+                        tempnode = new NodeLocation(Utility.warpAlternate(tempnode, grid), tempcheapestnode, grid);
+                    }
+                    if (tempnode.equals(target)) {
+                        //if it's the solution, then return the path
+                        solution = tempnode.sourcePath();
+                        break;
+                    }
+                    if (!(openlist.contains(tempnode)
+                            && openlist.get(openlist.indexOf(tempnode)).getCost(target) < tempnode.getCost(target))) {
+                        //if there isn't already a cheaper version of this node on the openlist
+                        if (!(closedlist.contains(tempnode)
+                                && closedlist.get(closedlist.indexOf(tempnode)).getCost(target) < tempnode.getCost(target))) {
+                            //if there isn't already a cheaper version of this node on the closedlist too
+                            openlist.add(tempnode);
+                        }
                     }
                 }
             }
@@ -224,6 +228,7 @@ public class PacMan extends Actor implements PacManInterface {
             closedlist.add(tempcheapestnode);
         }
         //if i get here from termination of the loop, then the result is always null
+        //This really shouldn't be called, anytime... :/
         return solution;
     }
 

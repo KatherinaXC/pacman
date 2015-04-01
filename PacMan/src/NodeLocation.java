@@ -6,8 +6,7 @@ import java.util.ArrayList;
 
 /**
  * A mod-"wrapper" class (is that what you'd call it?) that is effectively a
- * Linked List for Locations. Actually, I might replace this class with a Linked
- * List later. Eh.
+ * Linked List for Locations but also holds data necessary for the use of A*.
  *
  * @author s-zhouj
  */
@@ -19,11 +18,11 @@ public class NodeLocation extends Location {
 
     //static cost variables
     public static final int SUPER_PELLET_COST = 1;
-    public static final int REGULAR_PELLET_COST = 3;
+    public static final int REGULAR_PELLET_COST = 5;
     public static final int SCARED_GHOST_COST = 5;
-    public static final int EMPTY_COST = 15;
-    public static final int SCARY_GHOST_COST = 50;
-    public static final int WALL_COST = Integer.MAX_VALUE;
+    public static final int EMPTY_COST = 50;
+    public static final int SCARY_GHOST_COST = 100000;
+    public static final int WALL_COST = 10000000;
 
     public NodeLocation(Location whereIAm, Location whereDidIComeFrom, Grid grid) {
         super(whereIAm.getRow(), whereIAm.getCol());
@@ -67,7 +66,7 @@ public class NodeLocation extends Location {
     }
 
     /**
-     * Returns if this SourcedLocationStep is standalone or has a previous step.
+     * Returns if this node is standalone or has a previous step.
      *
      * @return
      */
@@ -76,10 +75,21 @@ public class NodeLocation extends Location {
     }
 
     /**
+     * Returns this node's cost.
+     *
+     * @param target
+     * @return
+     */
+    public int getCost(Location target) {
+        return this.cost + (int) Utility.euclideanDistance(this, target);
+    }
+
+    /**
      * Calculates the cost of the given path, using the static variables that
      * assign costs to certain moves.
      *
      * @param path
+     * @param grid
      * @return
      */
     public static int costCalculate(ArrayList<Location> path, Grid grid) {
@@ -97,8 +107,12 @@ public class NodeLocation extends Location {
                     result += NodeLocation.SCARY_GHOST_COST;
                 }
             } else if (testing instanceof Wall) {
-                result += NodeLocation.WALL_COST;
-            } else if (testing == null) {
+                if (testing instanceof Warp) {
+                    result += NodeLocation.EMPTY_COST;
+                } else {
+                    result += NodeLocation.WALL_COST;
+                }
+            } else {
                 result += NodeLocation.EMPTY_COST;
             }
         }

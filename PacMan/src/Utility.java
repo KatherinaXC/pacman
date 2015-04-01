@@ -227,4 +227,22 @@ public class Utility {
         }
         return results;
     }
+
+    /**
+     * Returns the counterpart Warp location to the given Warp.
+     *
+     * @param grid
+     * @return
+     */
+    public static Location warpAlternate(Location warp, Grid grid) {
+        ArrayList<Location> warps = new ArrayList<Location>();
+        ArrayList<Location> locs = grid.getOccupiedLocations();
+        for (int i = 0; i < locs.size(); i++) {
+            if (grid.get(locs.get(i)) instanceof Warp) {
+                //if it's a pellet or power pellet (power pellets extend pellet)
+                warps.add(locs.get(i));
+            }
+        }
+        return warps.get((warps.indexOf(warp) + 1) % warps.size());
+    }
 }

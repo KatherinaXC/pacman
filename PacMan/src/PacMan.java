@@ -4,6 +4,7 @@ import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  *
@@ -23,6 +24,7 @@ public class PacMan extends Actor implements PacManInterface {
     private boolean amSuper = false;
     private Color defColor;
     private boolean fullyInitialized = false;
+    private Location closestPellet = null;
 
     /**
      * Called after class creation to initialize a Pac-Man. Do not put your
@@ -118,25 +120,23 @@ public class PacMan extends Actor implements PacManInterface {
             }
             fullyInitialized = true;
         }
+        //Find the closest pellet
+        if (this.pellets.indexOf(closestPellet) < 0) {
+            //Find the new closest pellet, if i've already eaten the last one
+            this.closestPellet = getFurthestEdible();
+        }
 
         Location target = this.getLocation();
 
-        if (adjacentTest(this.getLocation()) != null) {
-            //If i'm next to something
-            target = adjacentTest(this.getLocation());
-            pathstep = Integer.MAX_VALUE;
-        } else {
-            //if i'm not next to something and have walked through my path, or am within 10 MHsteps of a ghost
-            if (this.pathstep >= path.size()
-                    || Utility.containsTestActor(Utility.withinRadius(this.getLocation(), 10, grid), ghosts)) {
-                //get a new path and reset my path progress
-                this.pathstep = 0;
-                this.path = aStarOptimalPath();
-            }
-            //follow the steps on my path
-            target = this.path.get(pathstep++);
-            this.myStats.moved();
+        //if i've walked through my path, have no path, or am within 20 MHsteps of a ghost
+        if (this.pathstep >= path.size()
+                || Utility.containsTestActor(Utility.withinRadius(this.getLocation(), 20, grid), ghosts)) {
+            //get a new path and reset my path progress            
+            this.path = aStarOptimalPath(this.closestPellet);
+            this.pathstep = 0;
         }
+        //follow the steps on my path
+        target = this.path.get(pathstep++);
 
         //Reactions to potential things that I may hit, after final target
         if (grid.get(target) instanceof Pellet) { //if I hit a pellet...
@@ -160,14 +160,120 @@ public class PacMan extends Actor implements PacManInterface {
             //Set my direction and make my final move.
             this.setDirection(this.getLocation().getDirectionToward(target));
             this.moveTo(target);
+            this.myStats.moved();
         }
+    }
+
+    /**
+     * Finds a path for Pac-Man to follow, based on the current location, using
+     * A* search algorithm.
+     *
+     * @param current
+     * @return
+     */
+    public ArrayList<Location> aStarOptimalPath(Location target) {
+        //Initialize the open list with my current location (places temp attempted)
+        ArrayList<NodeLocation> openlist = new ArrayList<>();
+        openlist.add(new NodeLocation(this.getLocation(), null, this.grid));
+        //initialize the closed list (places already tried)
+        ArrayList<NodeLocation> closedlist = new ArrayList<>();
+        ArrayList<Location> solution = null;
+
+        //Run through the list of places to try only if the target isn't null
+        while (openlist.size() > 0 && target != null) {
+            //Get the node with lowest cost
+            int templowestcost = Integer.MAX_VALUE;
+            NodeLocation tempcheapestnode = null;
+            for (NodeLocation testing : openlist) {
+                if (testing.getCost(target) < templowestcost) {
+                    templowestcost = testing.getCost(target);
+                    tempcheapestnode = testing;
+                }
+            }
+            //Remove lowest-cost from untested
+            openlist.remove(tempcheapestnode);
+
+            //Iterate through the surrounding spaces
+            for (Location temp : Utility.validSurrounding(tempcheapestnode, grid)) {
+                NodeLocation tempnode = new NodeLocation(temp, tempcheapestnode, grid);
+                if (grid.get(tempnode) instanceof Warp) {
+                    tempnode = new NodeLocation(Utility.warpAlternate(tempnode, grid), tempcheapestnode, grid);
+                }
+                if (tempnode.equals(target)) {
+                    //if it's the solution, then return the path
+                    solution = tempnode.sourcePath();
+                    break;
+                }
+                if (!(openlist.contains(tempnode)
+                        && openlist.get(openlist.indexOf(tempnode)).getCost(target) < tempnode.getCost(target))) {
+                    //if there isn't already a cheaper version of this node on the openlist
+                    if (!(closedlist.contains(tempnode)
+                            && closedlist.get(closedlist.indexOf(tempnode)).getCost(target) < tempnode.getCost(target))) {
+                        //if there isn't already a cheaper version of this node on the closedlist too
+                        openlist.add(tempnode);
+                    }
+                }
+            }
+            //break if there was a solution found inside that forloop
+            if (solution != null) {
+                //remove the current location
+                solution.remove(solution.indexOf(this.getLocation()));
+                break;
+            }
+            //otherwise put the one i just tested onto the tried-list
+            closedlist.add(tempcheapestnode);
+        }
+        //if i get here from termination of the loop, then the result is always null
+        return solution;
+    }
+
+    /**
+     * Call the required methods associated with eating the given pellet. This
+     * method is called when PacMan runs into a pellet of any type, or a ghost
+     * that has a pellet under/with it.
+     *
+     * @param pellet
+     */
+    private void scorePellet(Pellet pellet) {
+        if (pellet instanceof PowerPellet) { //A power pellet
+            this.myStats.addSuper();
+        } else { //a regular pellet
+            this.myStats.scorePellet();
+        }
+        this.pellets.remove(pellet.getLocation()); //remove eaten pellets from my list
+    }
+
+    /**
+     * Returns the location of an edible if the given location is adjacent to
+     * one, otherwise returns null. THIS METHOD IS UNUSED. I JUST DON'T WANT TO
+     * DELETE ANYTHING, EVER.
+     *
+     * @param current
+     * @return
+     */
+    private Location adjacentTest(Location current) {
+        //If I'm adjacent to something I want to eat, go there.
+        for (Location surrloc : grid.getValidAdjacentLocations(current)) {
+            //if it's not a diagonal (can't go in diagonals :P)
+            if (surrloc.getRow() == current.getRow()
+                    || surrloc.getCol() == current.getCol()) {
+                if (grid.get(surrloc) instanceof Pellet) {
+                    return surrloc;
+                } else if (this.isSuperPacMan() && grid.get(surrloc) instanceof Ghost) {
+                    return surrloc;
+                }
+            }
+        }
+        return null;
     }
 
     /**
      * Finds a path for Pac-Man to follow, based on the current location. Uses a
      * breadth-first search, filtering out steps that crash into walls and
      * stopping a search when a scatterghost or pellet is found, then returning
-     * the sequence of steps taken to get there.
+     * the sequence of steps taken to get there. THIS METHOD IS UNUSED AND
+     * EXISTS SOLELY SO THAT I CAN REFLECT ON BREADTH-FIRST SEARCHES AND THEIR
+     * SIMILARITY TO ASTAR.
      *
      * @param current
      * @return
@@ -212,95 +318,27 @@ public class PacMan extends Actor implements PacManInterface {
         return solution;
     }
 
-    /**
-     * Finds a path for Pac-Man to follow, based on the current location, using
-     * A* search algorithm.
-     *
-     * @param current
-     * @return
-     */
-    private ArrayList<Location> aStarOptimalPath(Location target) {
-        //Initialize the open list (places not yet attempted)
-        ArrayList<Location> openlist = new ArrayList<>();
-        for (int row = 0; row < this.grid.getNumRows(); row++) {
-            for (int col = 0; col < this.grid.getNumCols(); col++) {
-                openlist.add(new Location(row, col));
+    public Location getFurthestEdible() {
+        //Initialize variables
+        Random rand = new Random();
+        Location temp = new Location(rand.nextInt(grid.getNumRows()), rand.nextInt(grid.getNumCols()));
+        //Test pellets
+        for (Location pellet : this.pellets) {
+            if (Utility.euclideanDistance(pellet, this.getLocation())
+                    > Utility.euclideanDistance(temp, this.getLocation())) {
+                temp = pellet;
             }
         }
-        //initialize the closed list (places already tried) (somewhat modded, since start shouldn't be part of the path)
-        ArrayList<NodeLocation> closedlist = new ArrayList<>();
-        for (int direction : Utility.DIRECTIONS) {
-            if (Utility.directionMoveIsValid(direction, this.getLocation(), grid)) {
-                closedlist.add(new NodeLocation(Utility.directionMove(direction, this.getLocation()), null, this.grid));
-            }
-        }
-        ArrayList<Location> solution = null;
-
-        //Run through the list of places to try
-        while (openlist.size() > 0) {
-            //If there is a pellet next to me, return the path that I took in getting there
-            if (adjacentTest(openlist.get(0)) != null) {
-
-            } else {
-                //If there isn't, keep testing moves and adding them to the end to test later
-                for (int direction : Utility.DIRECTIONS) {
-                    //If it's a valid move
-                    if (Utility.directionMoveIsValid(direction, openlist.get(0), grid)) {
-                        NodeLocation temp = new NodeLocation(Utility.directionMove(direction, openlist.get(0)), openlist.get(0), this.grid);
-                        ArrayList<Location> leadupMap = temp.sourcePath();
-                        leadupMap.remove(leadupMap.size() - 1);
-                        //if it isn't contained in the current sequence already
-                        if (!leadupMap.contains(temp) && !this.getLocation().equals(temp)) {
-                            //if this won't lead me towards a ghost when i'm defenseless
-                            if (this.isSuperPacMan() || !(grid.get(temp) instanceof Ghost)) {
-                                openlist.add(temp);
-                            }
-                        }
-                    }
-                }
-            }
-            //Remove the current element (it won't be tested again)
-            openlist.remove(0);
-        }
-        return solution;
-    }
-
-    /**
-     * Call the required methods associated with eating the given pellet. This
-     * method is called when PacMan runs into a pellet of any type, or a ghost
-     * that has a pellet under/with it.
-     *
-     * @param pellet
-     */
-    private void scorePellet(Pellet pellet) {
-        if (pellet instanceof PowerPellet) { //A power pellet
-            this.myStats.addSuper();
-        } else { //a regular pellet
-            this.myStats.scorePellet();
-        }
-        this.pellets.remove(pellet.getLocation()); //remove eaten pellets from my list}
-    }
-
-    /**
-     * Returns the location of an edible if the given location is adjacent to
-     * one, otherwise returns null.
-     *
-     * @param current
-     * @return
-     */
-    private Location adjacentTest(Location current) {
-        //If I'm adjacent to something I want to eat, go there.
-        for (Location surrloc : grid.getValidAdjacentLocations(current)) {
-            //if it's not a diagonal (can't go in diagonals :P)
-            if (surrloc.getRow() == current.getRow()
-                    || surrloc.getCol() == current.getCol()) {
-                if (grid.get(surrloc) instanceof Pellet) {
-                    return surrloc;
-                } else if (this.isSuperPacMan() && grid.get(surrloc) instanceof Ghost) {
-                    return surrloc;
+        //Test ghosts
+        for (Actor ghost : this.ghosts) {
+            //Consider a ghost edible only if it's scared
+            if (ghost.getLocation() != null && ((Ghost) ghost).getScaredStatus()) {
+                if (Utility.euclideanDistance(ghost.getLocation(), this.getLocation())
+                        > Utility.euclideanDistance(temp, this.getLocation())) {
+                    temp = ghost.getLocation();
                 }
             }
         }
-        return null;
+        return temp;
     }
 }

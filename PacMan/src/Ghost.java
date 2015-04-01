@@ -128,10 +128,12 @@ public class Ghost extends Actor implements GhostInterface {
             }
         }
 
+        //if i'm not on the board don't even do anything
         if (this.getLocation() == null) {
             return;
         }
 
+        //do direct movement
         Location directtarget = this.getLocation();
         Location forward = Utility.directionMove(this.getDirection(), this.getLocation());
         //If it's not a wall and if I won't crash into a ghost, move directly forward
@@ -178,6 +180,8 @@ public class Ghost extends Actor implements GhostInterface {
             this.moveTo(directtarget);
             this.setDirection(this.getLocation().getDirectionToward(metatarget));
             this.myStats.moved();
+            //Increment my scatter timer
+            scatterTimer = (scatterTimer + 1) % 100;
         }
 
         //If I picked up a pellet earlier, drop it
@@ -196,7 +200,7 @@ public class Ghost extends Actor implements GhostInterface {
      * @return
      */
     public Location getTarget() {
-        if (this.amScared || this.getPacMan() == null || this.getPacMan().getLocation() == null) {
+        if (this.scatterTimer < 40 || this.amScared || this.getPacMan() == null || this.getPacMan().getLocation() == null) {
             return scatterTarget();
         } else {
             return regularTarget();

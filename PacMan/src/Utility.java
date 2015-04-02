@@ -75,11 +75,11 @@ public class Utility {
      * @return
      */
     public static Location directionMove(int direction, Location current) {
-        if (direction == 0) {
+        if (direction == Location.NORTH) {
             return new Location(current.getRow() - 1, current.getCol());
-        } else if (direction == 90) {
+        } else if (direction == Location.EAST) {
             return new Location(current.getRow(), current.getCol() + 1);
-        } else if (direction == 180) {
+        } else if (direction == Location.SOUTH) {
             return new Location(current.getRow() + 1, current.getCol());
         } else {
             return new Location(current.getRow(), current.getCol() - 1);
@@ -108,7 +108,7 @@ public class Utility {
      * @return
      */
     public static boolean directionIsOpposite(int direction1, int direction2) {
-        return Math.abs(direction1 - direction2) != 180;
+        return Math.abs(direction1 - direction2) != Location.HALF_CIRCLE;
     }
 
     /**

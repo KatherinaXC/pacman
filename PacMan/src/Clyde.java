@@ -6,6 +6,8 @@ import info.gridworld.grid.Location;
  * @author s-zhouj
  */
 public class Clyde extends Blinky {
+    
+    public static final int SIGHT_DISTANCE = 8;
 
     /**
      * Returns the target location that the ghost wants to get to when it's in
@@ -15,7 +17,7 @@ public class Clyde extends Blinky {
      */
     @Override
     public Location regularTarget() {
-        if (Utility.manhattanDistance(this.getLocation(), getPacMan().getLocation()) < 8) {
+        if (Utility.manhattanDistance(this.getLocation(), getPacMan().getLocation()) < SIGHT_DISTANCE) {
             return super.regularTarget();
         }
         return scatterTarget();

@@ -24,7 +24,7 @@ public class PacMan extends Actor implements PacManInterface {
     private boolean amSuper = false;
     private Color defColor;
     private boolean fullyInitialized = false;
-    private Location closestPellet = null;
+    private Location furthestPellet = null;
 
     /**
      * Called after class creation to initialize a Pac-Man. Do not put your
@@ -121,15 +121,15 @@ public class PacMan extends Actor implements PacManInterface {
             fullyInitialized = true;
         }
         //Find the closest pellet
-        if (this.pellets.indexOf(closestPellet) < 0) {
+        if (this.pellets.indexOf(furthestPellet) < 0) {
             //Find the new closest pellet, if i've already eaten the last one
-            this.closestPellet = getFurthestEdible();
+            this.furthestPellet = getFurthestEdible();
         }
 
         Location target = this.getLocation();
 
         //get a new path and reset my path progress            
-        this.path = AStarPath(this.closestPellet);
+        this.path = AStarPath(this.furthestPellet);
         this.pathstep = 0;
         //The AStarPath returns null in some cases... O.o
         if (path != null) {

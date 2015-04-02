@@ -25,8 +25,10 @@ public class Ghost extends Actor implements GhostInterface {
     private boolean fullyInitialized = false;
     private Pellet pickedUp = null;
     private Location pickedUpLoc = null;
-    private int scatterTimer = 0;
     private boolean amScared = false;
+
+    //Ghost-universal fields
+    private static int scatterTimer = 0;
 
     //Static final fields
     public static final int ACTIVE_GHOSTS = 4;
@@ -98,7 +100,7 @@ public class Ghost extends Actor implements GhostInterface {
             this.setColor(Color.BLUE);
             if (!amScared) {
                 //if pacman ate a pellet while i wasn't scared already
-                this.setDirection((this.getDirection() + 180) % 360);
+                this.setDirection((this.getDirection() + Location.HALF_CIRCLE) % Location.FULL_CIRCLE);
             }
         } else {
             //if the timer on pacman's super just ran out
@@ -169,14 +171,16 @@ public class Ghost extends Actor implements GhostInterface {
         //Filter out other ghosts' locations
         metalist = Utility.filter(metalist, ghosts);
         Location metatarget = Utility.closestLocation(metalist, this.getTarget());
-        //If I'm stuck, then set metatarget so that I'll rotate right
+        //If I'm stuck, then set metatarget so that I'll rotate
         if (metatarget == null) {
             Random rand = new Random();
             int turndirection = 0;
+            //get either 1 or -1
             do {
                 turndirection = rand.nextInt(2) - 1;
             } while (turndirection != 0);
-            metatarget = Utility.directionMove((this.getDirection() + 90 * turndirection) % 360, directtarget);
+            //add either 90 or -90 to my direction, set my metatarget to that
+            metatarget = Utility.directionMove((this.getDirection() + Location.HALF_RIGHT * turndirection) % Location.FULL_CIRCLE, directtarget);
         }
 
         //if I haven't died from the move that I'd make, and my random call doesn't say that I shouldn't move (Ghosts are slow)
@@ -186,8 +190,6 @@ public class Ghost extends Actor implements GhostInterface {
             this.moveTo(directtarget);
             this.setDirection(this.getLocation().getDirectionToward(metatarget));
             this.myStats.moved();
-            //Increment my scatter timer
-            scatterTimer = (scatterTimer + 1) % 100;
         }
 
         //If I picked up a pellet earlier, drop it
@@ -197,6 +199,9 @@ public class Ghost extends Actor implements GhostInterface {
         //Replace the pelletvariables
         this.pickedUp = tempPickedUp;
         this.pickedUpLoc = tempPickedUpLoc;
+
+        //Increment my scatter timer
+        scatterTimer = (scatterTimer + 1) % 100;
 
         //Perform flash sequence at the end of a scared-period
         if (this.currentlyFlashing()) {

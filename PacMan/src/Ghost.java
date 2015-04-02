@@ -94,9 +94,14 @@ public class Ghost extends Actor implements GhostInterface {
     @Override
     public void superPacMan(boolean bln) {
         if (bln) {
+            //if pacman just ate a pellet
             this.setColor(Color.BLUE);
-            this.setDirection((this.getDirection() + 180) % 360);
+            if (!amScared) {
+                //if pacman ate a pellet while i wasn't scared already
+                this.setDirection((this.getDirection() + 180) % 360);
+            }
         } else {
+            //if the timer on pacman's super just ran out
             this.setColor(origColor);
         }
         this.amScared = bln;
@@ -174,8 +179,9 @@ public class Ghost extends Actor implements GhostInterface {
             metatarget = Utility.directionMove((this.getDirection() + 90 * turndirection) % 360, directtarget);
         }
 
-        //if I haven't died from the move that I'd make
-        if (!haveDied) {
+        //if I haven't died from the move that I'd make, and my random call doesn't say that I shouldn't move (Ghosts are slow)
+        Random rand = new Random();
+        if (!haveDied && rand.nextInt(this.movementChance()) != 0) {
             //Set direction and make final move, log it
             this.moveTo(directtarget);
             this.setDirection(this.getLocation().getDirectionToward(metatarget));
@@ -205,6 +211,7 @@ public class Ghost extends Actor implements GhostInterface {
      * @return
      */
     public Location getTarget() {
+        //if i'm on my scatterloop, scared, pacman is dead... or pacman is dead?
         if (this.currentlyScattering()
                 || this.amScared
                 || this.getPacMan() == null
@@ -266,7 +273,7 @@ public class Ghost extends Actor implements GhostInterface {
             //if I'm blue right now, return white (so I can tell that it's flashing, and not being plain weird)
             return Color.WHITE;
         } else {
-            //if i'm original, return blue
+            //if i'm white, return blue
             return Color.BLUE;
         }
     }
@@ -314,6 +321,16 @@ public class Ghost extends Actor implements GhostInterface {
      */
     public boolean getScaredStatus() {
         return this.amScared;
+    }
+
+    /**
+     * Returns the chances of this particular ghost not moving (Speed of the
+     * ghost - higher means faster).
+     *
+     * @return
+     */
+    public int movementChance() {
+        return 1000;
     }
 
 }

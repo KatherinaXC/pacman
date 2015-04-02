@@ -13,6 +13,7 @@ public class Clyde extends Blinky {
      *
      * @return
      */
+    @Override
     public Location regularTarget() {
         if (Utility.manhattanDistance(this.getLocation(), getPacMan().getLocation()) < 8) {
             return super.regularTarget();
@@ -26,7 +27,19 @@ public class Clyde extends Blinky {
      *
      * @return
      */
+    @Override
     public Location scatterTarget() {
         return new Location(getGrid().getNumRows() - 1, getGrid().getNumCols() - 1);
+    }
+
+    /**
+     * Returns the chances of this particular ghost not moving (Speed of the
+     * ghost - higher means faster).
+     *
+     * @return
+     */
+    @Override
+    public int movementChance() {
+        return 500;
     }
 }

@@ -50,6 +50,22 @@ public class Utility {
     }
 
     /**
+     * Returns an ArrayList<Location> of all of the valid locations (including
+     * walls) that are around the given location in the given grid.
+     *
+     * @param current
+     * @param grid
+     * @return
+     */
+    public static ArrayList<Location> allSurrounding(Location current, Grid grid) {
+        ArrayList<Location> solutionlist = new ArrayList<Location>();
+        for (int direction : DIRECTIONS) {
+            solutionlist.add(Utility.directionMove(direction, current));
+        }
+        return solutionlist;
+    }
+
+    /**
      * Returns the location that is the given direction from the given location.
      * (Basically, returns a step in that direction, where the current location
      * is the second parameter.)

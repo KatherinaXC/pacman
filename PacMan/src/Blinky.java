@@ -13,6 +13,7 @@ public class Blinky extends Ghost {
      *
      * @return
      */
+    @Override
     public Location regularTarget() {
         return getPacMan().getLocation();
     }
@@ -23,7 +24,19 @@ public class Blinky extends Ghost {
      *
      * @return
      */
+    @Override
     public Location scatterTarget() {
         return new Location(0, getGrid().getNumCols() - 1);
+    }
+    
+    /**
+     * Returns the chances of this particular ghost not moving (Speed of the
+     * ghost - higher means faster).
+     *
+     * @return
+     */
+    @Override
+    public int movementChance() {
+        return 100;
     }
 }

@@ -13,6 +13,7 @@ public class Inky extends Ghost {
      *
      * @return
      */
+    @Override
     public Location regularTarget() {
         Location pacman = getPacMan().getLocation();
         if (getBlinky() == null) {
@@ -32,7 +33,19 @@ public class Inky extends Ghost {
      *
      * @return
      */
+    @Override
     public Location scatterTarget() {
         return new Location(getGrid().getNumRows() - 1, 0);
+    }
+
+    /**
+     * Returns the chances of this particular ghost not moving (Speed of the
+     * ghost - higher means faster).
+     *
+     * @return
+     */
+    @Override
+    public int movementChance() {
+        return 60;
     }
 }

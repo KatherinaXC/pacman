@@ -18,11 +18,11 @@ public class NodeLocation extends Location {
 
     //static cost variables
     public static final int SUPER_PELLET_COST = 1;
-    public static final int REGULAR_PELLET_COST = 10;
-    public static final int SCARED_GHOST_COST = 5;
+    public static final int REGULAR_PELLET_COST = 20;
+    public static final int SCARED_GHOST_COST = 7;
     public static final int EMPTY_COST = 100;
     public static final int SCARY_GHOST_COST = 100000;
-    public static final int WALL_COST = 10000000;
+    public static final int WALL_COST = 50000000;
 
     public NodeLocation(Location whereIAm, Location whereDidIComeFrom, Grid grid) {
         super(whereIAm.getRow(), whereIAm.getCol());

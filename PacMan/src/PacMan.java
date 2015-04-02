@@ -128,13 +128,10 @@ public class PacMan extends Actor implements PacManInterface {
 
         Location target = this.getLocation();
 
-        //if i've walked through my path, have no path, or am within 20 MHsteps of a ghost
-        if (path == null || this.pathstep >= path.size()
-                || Utility.containsTestActor(Utility.withinRadius(this.getLocation(), 20, grid), ghosts)) {
-            //get a new path and reset my path progress            
-            this.path = AStarPath(this.closestPellet);
-            this.pathstep = 0;
-        }
+        //get a new path and reset my path progress            
+        this.path = AStarPath(this.closestPellet);
+        this.pathstep = 0;
+        //The AStarPath returns null in some cases... O.o
         if (path != null) {
             //follow the steps on my path
             target = this.path.get(pathstep++);

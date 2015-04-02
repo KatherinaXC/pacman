@@ -191,6 +191,11 @@ public class Ghost extends Actor implements GhostInterface {
         //Replace the pelletvariables
         this.pickedUp = tempPickedUp;
         this.pickedUpLoc = tempPickedUpLoc;
+
+        //Perform flash sequence at the end of a scared-period
+        if (this.currentlyFlashing()) {
+            this.setColor(this.flash());
+        }
     }
 
     /**
@@ -200,7 +205,10 @@ public class Ghost extends Actor implements GhostInterface {
      * @return
      */
     public Location getTarget() {
-        if (this.scatterTimer < 40 || this.amScared || this.getPacMan() == null || this.getPacMan().getLocation() == null) {
+        if (this.currentlyScattering()
+                || this.amScared
+                || this.getPacMan() == null
+                || this.getPacMan().getLocation() == null) {
             return scatterTarget();
         } else {
             return regularTarget();
@@ -226,6 +234,41 @@ public class Ghost extends Actor implements GhostInterface {
      */
     public Location scatterTarget() {
         return this.getLocation();
+    }
+
+    /**
+     * Returns if this ghost is currently in the scatter portion of its movement
+     * cycle.
+     *
+     * @return
+     */
+    public boolean currentlyScattering() {
+        return this.scatterTimer < 40;
+    }
+
+    /**
+     * Returns if this ghost is currently supposed to be flashing (within
+     * 10steps before the end of a scared period).
+     *
+     * @return
+     */
+    public boolean currentlyFlashing() {
+        return this.getScaredStatus() && this.getPacMan().superTimeLeft() < 8;
+    }
+
+    /**
+     * Returns the color that the Ghost is supposed to flash to next.
+     *
+     * @return
+     */
+    public Color flash() {
+        if (this.getColor().equals(Color.BLUE)) {
+            //if I'm blue right now, return white (so I can tell that it's flashing, and not being plain weird)
+            return Color.WHITE;
+        } else {
+            //if i'm original, return blue
+            return Color.BLUE;
+        }
     }
 
     /**
@@ -272,4 +315,5 @@ public class Ghost extends Actor implements GhostInterface {
     public boolean getScaredStatus() {
         return this.amScared;
     }
+
 }

@@ -249,27 +249,37 @@ public class PacMan extends Actor implements PacManInterface {
     }
 
     /**
-     * Returns the location of an edible if the given location is adjacent to
-     * one, otherwise returns null. THIS METHOD IS UNUSED. I JUST DON'T WANT TO
-     * DELETE ANYTHING, EVER.
+     * Returns the edible (scared ghost or pellet) that is furthest away from
+     * PacMan.
      *
-     * @param current
      * @return
      */
-    private Location adjacentTest(Location current) {
-        //If I'm adjacent to something I want to eat, go there.
-        for (Location surrloc : grid.getValidAdjacentLocations(current)) {
-            //if it's not a diagonal (can't go in diagonals :P)
-            if (surrloc.getRow() == current.getRow()
-                    || surrloc.getCol() == current.getCol()) {
-                if (grid.get(surrloc) instanceof Pellet) {
-                    return surrloc;
-                } else if (this.isSuperPacMan() && grid.get(surrloc) instanceof Ghost) {
-                    return surrloc;
+    public Location getFurthestEdible() {
+        //Initialize variables
+        Random rand = new Random();
+        Location temp = new Location(rand.nextInt(grid.getNumRows()), rand.nextInt(grid.getNumCols()));
+        //Test pellets
+        for (Location pellet : this.pellets) {
+            if (Utility.euclideanDistance(pellet, this.getLocation())
+                    > Utility.euclideanDistance(temp, this.getLocation())) {
+                temp = pellet;
+            }
+        }
+        //Test ghosts
+        for (Actor ghost : this.ghosts) {
+            //Consider a ghost edible only if it's scared
+            if (ghost.getLocation() != null && ((Ghost) ghost).getScaredStatus()) {
+                if (Utility.euclideanDistance(ghost.getLocation(), this.getLocation())
+                        > Utility.euclideanDistance(temp, this.getLocation())) {
+                    temp = ghost.getLocation();
                 }
             }
         }
-        return null;
+        return temp;
+    }
+
+    public int superTimeLeft() {
+        return this.myStats.getSuperTime();
     }
 
     /**
@@ -323,27 +333,27 @@ public class PacMan extends Actor implements PacManInterface {
         return solution;
     }
 
-    public Location getFurthestEdible() {
-        //Initialize variables
-        Random rand = new Random();
-        Location temp = new Location(rand.nextInt(grid.getNumRows()), rand.nextInt(grid.getNumCols()));
-        //Test pellets
-        for (Location pellet : this.pellets) {
-            if (Utility.euclideanDistance(pellet, this.getLocation())
-                    > Utility.euclideanDistance(temp, this.getLocation())) {
-                temp = pellet;
-            }
-        }
-        //Test ghosts
-        for (Actor ghost : this.ghosts) {
-            //Consider a ghost edible only if it's scared
-            if (ghost.getLocation() != null && ((Ghost) ghost).getScaredStatus()) {
-                if (Utility.euclideanDistance(ghost.getLocation(), this.getLocation())
-                        > Utility.euclideanDistance(temp, this.getLocation())) {
-                    temp = ghost.getLocation();
+    /**
+     * Returns the location of an edible if the given location is adjacent to
+     * one, otherwise returns null. THIS METHOD IS UNUSED. I JUST DON'T WANT TO
+     * DELETE ANYTHING, EVER.
+     *
+     * @param current
+     * @return
+     */
+    private Location adjacentTest(Location current) {
+        //If I'm adjacent to something I want to eat, go there.
+        for (Location surrloc : grid.getValidAdjacentLocations(current)) {
+            //if it's not a diagonal (can't go in diagonals :P)
+            if (surrloc.getRow() == current.getRow()
+                    || surrloc.getCol() == current.getCol()) {
+                if (grid.get(surrloc) instanceof Pellet) {
+                    return surrloc;
+                } else if (this.isSuperPacMan() && grid.get(surrloc) instanceof Ghost) {
+                    return surrloc;
                 }
             }
         }
-        return temp;
+        return null;
     }
 }

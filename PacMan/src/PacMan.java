@@ -24,7 +24,7 @@ public class PacMan extends Actor implements PacManInterface {
     private boolean amSuper = false;
     private Color defColor;
     private boolean fullyInitialized = false;
-    private Location furthestPellet = null;
+    private Location furthestEdible = null;
 
     /**
      * Called after class creation to initialize a Pac-Man. Do not put your
@@ -120,16 +120,16 @@ public class PacMan extends Actor implements PacManInterface {
             }
             fullyInitialized = true;
         }
-        //Find the closest pellet
-        if (this.pellets.indexOf(furthestPellet) < 0) {
+        //Find the closest pellet if the current furthestEdible isn't on a list
+        if (!(this.pellets.indexOf(furthestEdible) >= 0 || this.ghosts.indexOf(furthestEdible) >= 0)) {
             //Find the new closest pellet, if i've already eaten the last one
-            this.furthestPellet = getFurthestEdible();
+            this.furthestEdible = getFurthestEdible();
         }
 
         Location target = this.getLocation();
 
         //get a new path and reset my path progress            
-        this.path = AStarPath(this.furthestPellet);
+        this.path = AStarPath(this.furthestEdible);
         this.pathstep = 0;
         //The AStarPath returns null in some cases... O.o
         if (path != null) {
@@ -253,8 +253,7 @@ public class PacMan extends Actor implements PacManInterface {
      */
     public Location getFurthestEdible() {
         //Initialize variables
-        Random rand = new Random();
-        Location temp = new Location(rand.nextInt(grid.getNumRows()), rand.nextInt(grid.getNumCols()));
+        Location temp = this.getLocation();
         //Test pellets
         for (Location pellet : this.pellets) {
             if (Utility.euclideanDistance(pellet, this.getLocation())
@@ -269,6 +268,17 @@ public class PacMan extends Actor implements PacManInterface {
                 if (Utility.euclideanDistance(ghost.getLocation(), this.getLocation())
                         > Utility.euclideanDistance(temp, this.getLocation())) {
                     temp = ghost.getLocation();
+                }
+            }
+        }
+        //if I haven't found an edible, get the furthest location that isn't a wall
+        if (temp.equals(this.getLocation())) {
+            for (int rows = 0; rows < this.grid.getNumRows(); rows++) {
+                for (int cols = 0; cols < this.grid.getNumCols(); cols++) {
+                    if (Utility.euclideanDistance(new Location(rows, cols), this.getLocation())
+                            > Utility.euclideanDistance(temp, this.getLocation())) {
+                        temp = new Location(rows, cols);
+                    }
                 }
             }
         }
